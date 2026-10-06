@@ -1,13 +1,14 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { exposeDebug } from './app/debug'
+import { initAudio } from './audio/sfx'
 import './index.css'
-
-function App() {
-  return <h1 className="p-4 text-2xl font-bold text-amber-600">borgers</h1>
-}
+import { App } from './ui/App'
 
 const root = document.getElementById('root')
 if (!root) throw new Error('missing #root')
+initAudio()
+exposeDebug()
 createRoot(root).render(
   <StrictMode>
     <App />

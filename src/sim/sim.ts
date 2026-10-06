@@ -239,6 +239,7 @@ export class Sim {
         spend(this, t2.cost, 'construction')
         o.tier = 1
         while (o.slots.length < t2.slots) o.slots.push(null)
+        this.layoutChanged()
         return OK
       }
       case 'paint': {

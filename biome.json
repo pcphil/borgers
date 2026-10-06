@@ -44,6 +44,16 @@
           }
         }
       }
+    },
+    {
+      "includes": ["src/render/**"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noStaticElementInteractions": "off"
+          }
+        }
+      }
     }
   ]
 }
