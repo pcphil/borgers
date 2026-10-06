@@ -1,6 +1,7 @@
 import { audioStatus } from '../audio/sfx'
 import { LOT } from '../data/balance'
 import type { ObjectDefId } from '../data/catalogue'
+import { autoplay } from '../dev/autopilot'
 import { spawnGroup } from '../sim/customers'
 import { idx, newPlacedObject } from '../sim/layout'
 import { newGame } from '../sim/world'
@@ -66,5 +67,19 @@ function measureFps(ms = 5000): Promise<number> {
 
 /** Dev/test hook: exposes the host on window for scripted playtests (not used by the game). */
 export function exposeDebug() {
-  ;(window as unknown as { borgers: unknown }).borgers = { host, audioStatus, stress, measureFps }
+  ;(window as unknown as { borgers: unknown }).borgers = {
+    host,
+    audioStatus,
+    stress,
+    measureFps,
+    /** Fast-forward `days` with the scripted competent player (dev/testing only). */
+    autoplay: (days: number) => {
+      if (!host.sim) return null
+      autoplay(host.sim, days)
+      host.sim.drainEvents()
+      host.publish()
+      const w = host.sim.world
+      return { day: w.clock.day, stars: w.stars, cash: w.economy.cash }
+    },
+  }
 }

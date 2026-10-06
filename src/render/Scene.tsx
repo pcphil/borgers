@@ -15,8 +15,10 @@ const Perf = import.meta.env.DEV
 
 /** Publishes renderer stats for the perf script (cheap: one object reference per frame). */
 function RenderInfo() {
-  useFrame(({ gl }) => {
-    ;(window as unknown as { __borgersRender: unknown }).__borgersRender = gl.info.render
+  useFrame(({ gl, camera, size }) => {
+    const w = window as unknown as Record<string, unknown>
+    w.__borgersRender = gl.info.render
+    w.__borgersCamera = { camera, size }
   })
   return null
 }

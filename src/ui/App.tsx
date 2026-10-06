@@ -86,7 +86,6 @@ function GameScreen() {
           <Inspect />
         </div>
         <div className="absolute inset-x-0 bottom-3 flex flex-col items-center gap-1">
-          <Toasts />
           <BuildStatus />
         </div>
         <DaySummary />
@@ -102,6 +101,9 @@ export function App() {
   return (
     <div className="relative h-full w-full select-none overflow-hidden bg-slate-900 font-sans">
       {screen === 'game' ? <GameScreen /> : <MainMenu />}
+      <div className="pointer-events-none absolute inset-x-0 bottom-12 flex justify-center">
+        <Toasts />
+      </div>
       <SettingsModal />
     </div>
   )

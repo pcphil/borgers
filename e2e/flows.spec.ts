@@ -25,7 +25,7 @@ test('save, quit and load restores the game', async ({ page }) => {
   await page.getByTitle('Settings').click()
   await page.getByRole('button', { name: 'Quit to main menu' }).click()
   await page.getByRole('button', { name: 'Load / Import' }).click()
-  await expect(page.getByText('e2e save')).toBeVisible()
+  await expect(page.getByText('e2e save', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Load', exact: true }).first().click()
   await expect(page.getByTestId('hud-clock')).toContainText('Day 1')
   await page.keyboard.press('h')
