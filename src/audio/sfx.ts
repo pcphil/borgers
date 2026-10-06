@@ -63,6 +63,9 @@ async function load() {
   )
 }
 
+/** Loaded sound count and context state (debug/testing). */
+export const audioStatus = () => ({ loaded: buffers.size, state: ctx?.state ?? 'locked' })
+
 function play(s: Sound) {
   if (!ctx || !master) return
   const buf = buffers.get(s)

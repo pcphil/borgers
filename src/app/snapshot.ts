@@ -116,6 +116,7 @@ export function makeSnapshot(sim: Sim, speed: Speed): Snapshot {
 
 export const money = (cents: number) => {
   const sign = cents < 0 ? '-' : ''
-  const v = Math.abs(cents) / 100
-  return `${sign}$${v.toLocaleString('en-US', { maximumFractionDigits: v < 100 ? 2 : 0, minimumFractionDigits: v < 100 ? 2 : 0 })}`
+  const abs = Math.abs(Math.round(cents))
+  const digits = abs % 100 === 0 ? 0 : 2
+  return `${sign}$${(abs / 100).toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits })}`
 }

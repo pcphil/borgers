@@ -1,26 +1,21 @@
 import { useFrame } from '@react-three/fiber'
-import { memo, useMemo, useRef } from 'react'
-import type { Group, Mesh } from 'three'
+import { memo, Suspense, useMemo, useRef } from 'react'
+import type { Group } from 'three'
 import { host } from '../app/host'
 import type { ObjectView } from '../app/snapshot'
 import { useUI } from '../app/store'
 import { CATALOGUE } from '../data/catalogue'
 import { objectTransform } from './coords'
+import { Kenney } from './kenney'
+import { FOOD_MODEL, KENNEY_MODELS } from './kenneyModels'
 import { MODELS } from './models'
-
-const FOOD: Record<string, { color: string; size: [number, number, number] }> = {
-  grill: { color: '#6b3b1f', size: [0.3, 0.08, 0.3] },
-  fryer: { color: '#f2c14e', size: [0.2, 0.15, 0.2] },
-  assembly: { color: '#d99a4e', size: [0.28, 0.18, 0.28] },
-  soda: { color: '#c0392b', size: [0.14, 0.25, 0.14] },
-}
 
 /** Busy-slot food, dirty plates and ready bags, toggled from live sim state each frame. */
 function StateProps({ view }: { view: ObjectView }) {
   const def = CATALOGUE[view.def]
-  const items = useRef<(Mesh | null)[]>([])
+  const items = useRef<(Group | null)[]>([])
   const dirt = useRef<Group>(null)
-  const food = def.station ? FOOD[def.station] : undefined
+  const food = FOOD_MODEL[view.def === 'pickup' ? 'pickup' : (def.station ?? '')]
   const maxItems = view.def === 'pickup' ? 6 : (def.tiers[view.tier]?.slots ?? 0)
 
   useFrame(() => {
@@ -39,28 +34,27 @@ function StateProps({ view }: { view: ObjectView }) {
 
   return (
     <>
-      {Array.from({ length: maxItems }, (_, i) => (
-        <mesh
-          // biome-ignore lint/suspicious/noArrayIndexKey: fixed pool of slot meshes
-          key={i}
-          ref={(m) => {
-            items.current[i] = m
-          }}
-          visible={false}
-          position={[
-            spread(i, maxItems) * (w > 1 ? 1 : 0.4),
-            view.def === 'pickup' ? 1.08 : 1.02,
-            view.def === 'pickup' ? 0 : -0.1,
-          ]}
-        >
-          <boxGeometry
-            args={view.def === 'pickup' ? [0.22, 0.3, 0.18] : (food?.size ?? [0.2, 0.1, 0.2])}
-          />
-          <meshStandardMaterial
-            color={view.def === 'pickup' ? '#c8a26b' : (food?.color ?? '#999')}
-          />
-        </mesh>
-      ))}
+      {food
+        ? Array.from({ length: maxItems }, (_, i) => (
+            <group
+              // biome-ignore lint/suspicious/noArrayIndexKey: fixed pool of slot props
+              key={i}
+              ref={(m) => {
+                items.current[i] = m
+              }}
+              visible={false}
+              position={[
+                spread(i, maxItems) * (w > 1 ? 1 : 0.4),
+                0.93,
+                view.def === 'pickup' ? 0 : -0.05,
+              ]}
+            >
+              <Suspense fallback={null}>
+                <Kenney path={food.path} w={food.w} rotY={0} />
+              </Suspense>
+            </group>
+          ))
+        : null}
       {def.seats ? (
         <group ref={dirt} visible={false}>
           <mesh position={[-0.2, 0.77, 0]}>
@@ -81,6 +75,14 @@ function StateProps({ view }: { view: ObjectView }) {
   )
 }
 
+/** Small gold trim marking upgraded (tier 2) stations. */
+const TierBadge = ({ w }: { w: number }) => (
+  <mesh position={[0, 0.92, -0.47]}>
+    <boxGeometry args={[w * 0.9, 0.05, 0.03]} />
+    <meshStandardMaterial color="#e0b23c" metalness={0.6} roughness={0.3} />
+  </mesh>
+)
+
 const ObjectMesh = memo(function ObjectMesh({
   view,
   selected,
@@ -92,7 +94,14 @@ const ObjectMesh = memo(function ObjectMesh({
   const def = CATALOGUE[view.def]
   return (
     <group position={t.position} rotation={[0, t.rotationY, 0]} userData={{ objectId: view.id }}>
-      {MODELS[view.def](view.tier)}
+      {KENNEY_MODELS[view.def] ? (
+        <Suspense fallback={MODELS[view.def](view.tier)}>
+          {KENNEY_MODELS[view.def]?.()}
+          {view.tier ? <TierBadge w={def.w} /> : null}
+        </Suspense>
+      ) : (
+        MODELS[view.def](view.tier)
+      )}
       <StateProps view={view} />
       {selected ? (
         <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>

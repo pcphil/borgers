@@ -1,4 +1,4 @@
-import { Canvas } from '@react-three/fiber'
+import { Canvas, useFrame } from '@react-three/fiber'
 import { lazy, Suspense } from 'react'
 import { useUI } from '../app/store'
 import { Agents } from './Agents'
@@ -12,6 +12,14 @@ import { Objects } from './Objects'
 const Perf = import.meta.env.DEV
   ? lazy(() => import('r3f-perf').then((m) => ({ default: m.Perf })))
   : null
+
+/** Publishes renderer stats for the perf script (cheap: one object reference per frame). */
+function RenderInfo() {
+  useFrame(({ gl }) => {
+    ;(window as unknown as { __borgersRender: unknown }).__borgersRender = gl.info.render
+  })
+  return null
+}
 
 export function Scene() {
   const shadows = useUI((s) => s.settings.shadows)
@@ -30,6 +38,7 @@ export function Scene() {
       <Agents />
       <Labels />
       <BuildPreview />
+      <RenderInfo />
       {Perf && new URLSearchParams(location.search).has('perf') ? (
         <Suspense fallback={null}>
           <Perf position="bottom-left" />

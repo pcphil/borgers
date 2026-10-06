@@ -12,11 +12,21 @@ await page.goto(url)
 for (const a of actions) {
   const [kind, ...rest] = a.split(':')
   const arg = rest.join(':')
-  if (kind === 'click') await page.getByRole('button', { name: arg, exact: true }).first().click()
+  if (kind === 'click')
+    await page
+      .getByRole('button', { name: arg.replace(/^~/, ''), exact: !arg.startsWith('~') })
+      .first()
+      .click()
   else if (kind === 'wait') await page.waitForTimeout(Number(arg))
   else if (kind === 'key') await page.keyboard.press(arg)
   else if (kind === 'eval') console.log('eval:', await page.evaluate(arg))
-  else if (kind === 'mouse') {
+  else if (kind === 'move') {
+    const [x, y] = arg.split(',').map(Number)
+    await page.mouse.move(x, y, { steps: 4 })
+  } else if (kind === 'wheel') {
+    await page.mouse.move(700, 430)
+    for (let i = 0; i < Number(arg); i++) await page.mouse.wheel(0, -120)
+  } else if (kind === 'mouse') {
     const [x, y] = arg.split(',').map(Number)
     await page.mouse.click(x, y)
   }
