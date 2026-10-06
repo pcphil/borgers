@@ -68,6 +68,23 @@ export function computeHints(w: World): Hint[] {
       })
   }
 
+  // Kitchen backlog: many unclaimed steps for one role means that role can't keep up.
+  const backlog = { cook: 0, assembler: 0 }
+  for (const t of Object.values(w.tasks))
+    if (t.claimedBy === null && (t.role === 'cook' || t.role === 'assembler')) backlog[t.role]++
+  if (backlog.cook >= 6 && hasRole('cook'))
+    out.push({
+      id: 'backlog-cook',
+      text: `Cooks can't keep up (${backlog.cook} items waiting). Assign another Cook or add a grill.`,
+      severity: 'warn',
+    })
+  if (backlog.assembler >= 6 && hasRole('assembler'))
+    out.push({
+      id: 'backlog-assembler',
+      text: `Assemblers can't keep up (${backlog.assembler} items waiting). Assign another Assembler.`,
+      severity: 'warn',
+    })
+
   const regs = objs.filter((o) => o.def === 'register')
   if (regs.length > 0 && regs.every((r) => r.queue.length >= 5))
     out.push({

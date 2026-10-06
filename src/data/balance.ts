@@ -37,8 +37,8 @@ export const INVENTORY = {
 
 export const STAFF = {
   candidates: 3,
-  baseWage: 4_000,
-  wagePerStat: 8_000,
+  baseWage: 2_500,
+  wagePerStat: 5_000,
   walkSpeed: 2.6,
   workSpeedMin: 0.6,
   workSpeedRange: 0.8,
@@ -66,16 +66,16 @@ export const CUSTOMERS = {
   dirtRadius: 3,
   /** Groups per game hour by hour of day (piecewise linear). */
   demandCurve: [
-    [10, 2],
-    [11, 4],
-    [12, 10],
-    [13, 9],
-    [14, 4],
-    [17, 4],
-    [18, 9],
-    [19, 9],
-    [20, 5],
-    [21.5, 2],
+    [10, 1.5],
+    [11, 3],
+    [12, 6.5],
+    [13, 6],
+    [14, 3],
+    [17, 3],
+    [18, 6],
+    [19, 6],
+    [20, 3.5],
+    [21.5, 1.5],
     [22, 0],
   ] as [number, number][],
   priceElasticity: 2,
@@ -94,7 +94,7 @@ export const QUALITY = { skillWeight: 0.5, tierWeight: 0.5 }
 /** Star thresholds: index = target star. Reputation (0-100) and cumulative revenue (cents). */
 export const STARS: Record<2 | 3 | 4 | 5, { reputation: number; revenue: number }> = {
   2: { reputation: 55, revenue: 150_000 },
-  3: { reputation: 62, revenue: 600_000 },
-  4: { reputation: 68, revenue: 1_500_000 },
-  5: { reputation: 75, revenue: 3_500_000 },
+  3: { reputation: 60, revenue: 500_000 },
+  4: { reputation: 65, revenue: 1_100_000 },
+  5: { reputation: 70, revenue: 2_000_000 },
 }

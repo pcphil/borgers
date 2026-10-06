@@ -60,8 +60,8 @@ export const MENU: Record<MenuItemId, MenuItemDef> = {
     fairValue: 600,
     appeal: 1,
     steps: [
-      { station: 'grill', seconds: 4, consumes: { patty: 1 } },
-      { station: 'assembly', seconds: 2.5, consumes: { bun: 1, lettuce: 1, tomato: 1 } },
+      { station: 'grill', seconds: 3, consumes: { patty: 1 } },
+      { station: 'assembly', seconds: 1.5, consumes: { bun: 1, lettuce: 1, tomato: 1 } },
     ],
   },
   cheese: {
@@ -71,8 +71,8 @@ export const MENU: Record<MenuItemId, MenuItemDef> = {
     fairValue: 750,
     appeal: 1.3,
     steps: [
-      { station: 'grill', seconds: 4, consumes: { patty: 1 } },
-      { station: 'assembly', seconds: 2.5, consumes: { bun: 1, cheese: 1, lettuce: 1 } },
+      { station: 'grill', seconds: 3, consumes: { patty: 1 } },
+      { station: 'assembly', seconds: 1.5, consumes: { bun: 1, cheese: 1, lettuce: 1 } },
     ],
   },
   double: {
@@ -82,8 +82,8 @@ export const MENU: Record<MenuItemId, MenuItemDef> = {
     fairValue: 1000,
     appeal: 1.5,
     steps: [
-      { station: 'grill', seconds: 5, consumes: { patty: 2 } },
-      { station: 'assembly', seconds: 3, consumes: { bun: 1, cheese: 2 } },
+      { station: 'grill', seconds: 4, consumes: { patty: 2 } },
+      { station: 'assembly', seconds: 2, consumes: { bun: 1, cheese: 2 } },
     ],
   },
   fries: {
@@ -92,7 +92,7 @@ export const MENU: Record<MenuItemId, MenuItemDef> = {
     category: 'side',
     fairValue: 300,
     appeal: 1,
-    steps: [{ station: 'fryer', seconds: 4, consumes: { potato: 1 } }],
+    steps: [{ station: 'fryer', seconds: 3, consumes: { potato: 1 } }],
   },
   soda: {
     id: 'soda',
@@ -100,6 +100,6 @@ export const MENU: Record<MenuItemId, MenuItemDef> = {
     category: 'drink',
     fairValue: 200,
     appeal: 1,
-    steps: [{ station: 'soda', seconds: 1, consumes: { syrup: 1 } }],
+    steps: [{ station: 'soda', seconds: 0.6, consumes: { syrup: 1 } }],
   },
 }
