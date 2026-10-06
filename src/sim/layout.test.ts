@@ -3,7 +3,7 @@ import { LOT } from '../data/balance'
 import { CATALOGUE, OBJECT_IDS } from '../data/catalogue'
 import { INGREDIENTS, MENU, MENU_ITEM_IDS } from '../data/recipes'
 import { STARTER } from '../data/starterLayout'
-import { requiredStars, ROLES, UNLOCKS } from '../data/unlocks'
+import { ROLES, requiredStars, UNLOCKS } from '../data/unlocks'
 import { accessTiles, footprintTiles } from './geometry'
 import { checkPlace, objectList, validateObjects, zoneAt } from './layout'
 import { addStaff, BASIC_OBJECTS, makeSim } from './testkit'
@@ -161,7 +161,9 @@ describe('place / move / sell (4.3)', () => {
 describe('zone painting (4.4)', () => {
   it('paints free tiles and rejects tiles under incompatible objects', () => {
     const sim = makeSim({ objects: BASIC_OBJECTS })
-    expect(sim.dispatch({ type: 'paint', tiles: [{ x: 11, y: 3 }], zone: ZONE_KITCHEN }).ok).toBe(true)
+    expect(sim.dispatch({ type: 'paint', tiles: [{ x: 11, y: 3 }], zone: ZONE_KITCHEN }).ok).toBe(
+      true,
+    )
     expect(zoneAt(sim.world, 11, 3)).toBe(ZONE_KITCHEN)
     const r = sim.dispatch({ type: 'paint', tiles: [{ x: 2, y: 8 }], zone: ZONE_DINING })
     expect(r.ok).toBe(false)
@@ -169,7 +171,9 @@ describe('zone painting (4.4)', () => {
   })
   it('cannot repaint a register customer access tile to kitchen', () => {
     const sim = makeSim({ objects: BASIC_OBJECTS })
-    expect(sim.dispatch({ type: 'paint', tiles: [{ x: 5, y: 4 }], zone: ZONE_KITCHEN }).ok).toBe(false)
+    expect(sim.dispatch({ type: 'paint', tiles: [{ x: 5, y: 4 }], zone: ZONE_KITCHEN }).ok).toBe(
+      false,
+    )
   })
 })
 

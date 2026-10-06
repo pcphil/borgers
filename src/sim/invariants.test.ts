@@ -37,7 +37,10 @@ type Strategy = (sim: Sim) => void
 const STRATEGIES: Record<string, Strategy> = {
   noStaff: () => {},
   three: (sim) => {
-    for (const c of [...sim.world.candidates].slice(0, Math.max(0, 3 - Object.keys(sim.world.staff).length)))
+    for (const c of [...sim.world.candidates].slice(
+      0,
+      Math.max(0, 3 - Object.keys(sim.world.staff).length),
+    ))
       sim.dispatch({ type: 'hire', candidateId: c.id })
   },
   churn: (sim) => {

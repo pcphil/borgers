@@ -205,7 +205,8 @@ describe('customer exits (8.2, 8.4)', () => {
   })
   it('no seat before patience -> leaves with noSeats', () => {
     const sim = makeSim({ objects: BASIC_OBJECTS })
-    for (const o of Object.values(sim.world.objects)) if (o.def.startsWith('table')) o.occupiedBy = 999
+    for (const o of Object.values(sim.world.objects))
+      if (o.def.startsWith('table')) o.occupiedBy = 999
     const g = spawnGroup(sim)
     g.takeout = false
     g.state = 'seeking'
@@ -226,7 +227,10 @@ describe('customer exits (8.2, 8.4)', () => {
 describe('ordering choice (8.3)', () => {
   it('overpriced items are ordered less often', () => {
     const count = (price: number) => {
-      const sim = makeSim({ objects: BASIC_OBJECTS, stock: { ...BASIC_STOCK, patty: 200, bun: 200 } })
+      const sim = makeSim({
+        objects: BASIC_OBJECTS,
+        stock: { ...BASIC_STOCK, patty: 200, bun: 200 },
+      })
       sim.world.stars = 3
       sim.dispatch({ type: 'setMenu', item: 'cheese', patch: { price } })
       addStaff(sim, 'cashier', { service: 1 })

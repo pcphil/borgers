@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { CUSTOMERS, TICKS_PER_SECOND } from '../data/balance'
 import { queueSlots, spawnGroup } from './customers'
 import { createOrder } from './kitchen'
+import { isAvailable, unavailableReason } from './menu'
 import { move, newAgent, setTarget } from './movement'
 import { findPath } from './path'
-import { isAvailable, unavailableReason } from './menu'
 import { addStaff, BASIC_OBJECTS, BASIC_STOCK, makeSim, stepUntil } from './testkit'
 import type { PlacedObject, Staff } from './types'
 
@@ -36,7 +36,9 @@ describe('re-pathing (5.2)', () => {
     const a = newAgent({ x: 0, y: 0 })
     setTarget(sim, a, { x: 11, y: 0 }, true)
     const block = a.path[4] as { x: number; y: number }
-    expect(sim.dispatch({ type: 'place', def: 'bin', x: block.x, y: block.y, rot: 0 }).ok).toBe(true)
+    expect(sim.dispatch({ type: 'place', def: 'bin', x: block.x, y: block.y, rot: 0 }).ok).toBe(
+      true,
+    )
     move(sim, a, 1, true)
     expect(a.path.some((t) => t.x === block.x && t.y === block.y)).toBe(false)
     expect(a.navFailed).toBe(false)
