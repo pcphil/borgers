@@ -91,7 +91,7 @@
 - [x] 11.5 Render object states (food on grill, dirty table, trash, order on pickup); verify visually during a run
 - [x] 11.6 Implement day/night lighting driven by clock, shadows toggle; verify night is visibly darker
 - [x] 11.7 Import, compress and wire Kenney/Quaternius CC0 models replacing primitives; add `ASSETS.md` with licenses; verify all models load and build size is reasonable
-- [ ] 11.8 Add r3f-perf in dev and a stress scene (100 agents, 150 objects); verify ≥60 fps on reference iGPU with shadows off
+- [x] 11.8 Add r3f-perf in dev and a stress scene (100 agents, 150 objects); verify ≥60 fps on reference iGPU with shadows off
 
 ## 12. UI
 
@@ -115,5 +115,5 @@
 
 - [x] 14.1 Replace placeholder Playwright test with smoke test: load app, start new game, canvas renders, clock advances; verify passes in CI
 - [x] 14.2 Balance pass using `scripts/simulate.ts`: tune `balance.ts` so a reasonable strategy reaches 2★ within ~5 days and 5★ within ~30 days without loans; record results in this change
-- [ ] 14.3 Full manual playthrough from new game to 3★ including save/load, export/import and building during service; fix blocking bugs found
+- [x] 14.3 Full manual playthrough from new game to 3★ including save/load, export/import and building during service; fix blocking bugs found
 - [ ] 14.4 Deploy to GitHub Pages and verify the public URL runs a full day
