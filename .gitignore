@@ -1,0 +1,26 @@
+# dependencies / build output
+node_modules
+dist
+coverage
+*.tsbuildinfo
+
+# test output
+test-results
+playwright-report
+blob-report/
+playwright/.cache/
+
+# tooling caches
+.vite/
+.history
+
+# env / logs / OS
+.env*
+!.env.example
+*.log
+.DS_Store
+Thumbs.db
+
+# personal Claude Code settings
+.claude/settings.local.json
+CLAUDE.md
