@@ -54,5 +54,6 @@ export function priceFairness(price: number, fair: number): number {
 export function setMenu(sim: Sim, id: MenuItemId, patch: Partial<MenuEntry>) {
   const e = sim.world.menu[id]
   if (patch.enabled !== undefined) e.enabled = patch.enabled
-  if (patch.price !== undefined) e.price = Math.max(0, Math.round(patch.price))
+  if (patch.price !== undefined && Number.isFinite(patch.price))
+    e.price = Math.max(0, Math.round(patch.price))
 }

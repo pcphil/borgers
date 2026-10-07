@@ -1,6 +1,8 @@
 // Helpers for building small deterministic scenarios in tests.
+import { expect } from 'vitest'
+import { CUSTOMERS } from '../data/balance'
 import type { ObjectDefId } from '../data/catalogue'
-import type { Ingredient } from '../data/recipes'
+import { INGREDIENTS, type Ingredient } from '../data/recipes'
 import type { Role } from '../data/unlocks'
 import { MAXH, MAXW, newPlacedObject } from './layout'
 import { Sim } from './sim'
@@ -77,6 +79,39 @@ export const BASIC_OBJECTS: Scenario['objects'] = [
 ]
 
 export const BASIC_STOCK = { bun: 40, patty: 40, lettuce: 40, tomato: 40, syrup: 40, cheese: 40 }
+
+/** Cross-link and sanity checks shared by the invariant, soak and fuzz tests. */
+export function checkInvariants(sim: Sim) {
+  const w = sim.world
+  expect(Number.isInteger(w.economy.cash)).toBe(true)
+  expect(Number.isInteger(w.economy.loan)).toBe(true)
+  for (const i of INGREDIENTS) {
+    expect(w.inventory.stock[i]).toBeGreaterThanOrEqual(0)
+    expect(w.inventory.reserved[i]).toBeGreaterThanOrEqual(0)
+    expect(w.inventory.reserved[i]).toBeLessThanOrEqual(w.inventory.stock[i])
+  }
+  for (const a of [...Object.values(w.groups), ...Object.values(w.staff)]) {
+    expect(Number.isFinite(a.pos.x) && Number.isFinite(a.pos.y)).toBe(true)
+    expect(a.pos.x).toBeGreaterThanOrEqual(0)
+    expect(a.pos.y).toBeGreaterThanOrEqual(0)
+    expect(a.pos.x).toBeLessThan(w.layout.w)
+    expect(a.pos.y).toBeLessThan(w.layout.h)
+  }
+  for (const t of Object.values(w.tasks)) {
+    if (t.claimedBy !== null) expect(w.staff[t.claimedBy]?.taskId).toBe(t.id)
+    // A task for a vanished order may only be one already being worked on.
+    if (t.orderId !== null && !w.orders[t.orderId]) expect(t.claimedBy).not.toBeNull()
+  }
+  for (const s of Object.values(w.staff))
+    if (s.taskId !== null) expect(w.tasks[s.taskId]?.claimedBy).toBe(s.id)
+  for (const o of Object.values(w.objects)) {
+    for (const slot of o.slots) if (slot !== null) expect(w.tasks[slot]).toBeDefined()
+    for (const g of o.queue) expect(w.groups[g]?.registerId).toBe(o.id)
+    if (o.occupiedBy !== null) expect(w.groups[o.occupiedBy]?.tableId).toBe(o.id)
+    for (const r of o.readyOrders) expect(w.orders[r]?.state).toBe('ready')
+  }
+  expect(Object.keys(w.groups).length).toBeLessThanOrEqual(CUSTOMERS.maxActiveGroups + 1)
+}
 
 export function stepUntil(sim: Sim, pred: () => boolean, max = 20_000): number {
   for (let i = 0; i < max; i++) {
