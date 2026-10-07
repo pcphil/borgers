@@ -2,6 +2,7 @@ import { host } from '../app/host'
 import type { Speed } from '../app/loop'
 import { money } from '../app/snapshot'
 import { type Panel, useUI } from '../app/store'
+import { ROTATE_EVENT } from '../render/CameraRig'
 import { Stars } from './common'
 
 const SPEEDS: { s: Speed; label: string; key: string }[] = [
@@ -25,15 +26,17 @@ export function Hud() {
   const panel = useUI((s) => s.panel)
   const setPanel = useUI((s) => s.setPanel)
   if (!snap) return null
-  const phaseText = snap.phase === 'open' ? 'Open' : snap.phase === 'closing' ? 'Closing' : 'Night'
+  const phaseText = { prep: 'Preparing', open: 'Open', closing: 'Closing', night: 'Night' }[
+    snap.phase
+  ]
   return (
-    <div className="pointer-events-auto flex flex-wrap items-center gap-2 rounded-xl bg-amber-50/95 px-3 py-2 shadow-lg">
-      <div className="flex items-baseline gap-2 pr-2">
+    <div className="pointer-events-auto flex flex-wrap items-center gap-1.5 rounded-xl bg-amber-50/95 px-2.5 py-2 shadow-lg">
+      <div className="flex items-baseline gap-2">
         <span className="font-black text-red-700">borgers</span>
         <Stars n={snap.stars} />
       </div>
       <div
-        className={`min-w-24 font-mono text-lg font-bold ${snap.cash < 0 ? 'text-red-600' : 'text-green-800'}`}
+        className={`min-w-20 font-mono text-lg font-bold ${snap.cash < 0 ? 'text-red-600' : 'text-green-800'}`}
         data-testid="hud-cash"
       >
         {money(snap.cash)}
@@ -46,6 +49,16 @@ export function Hud() {
           {phaseText}
         </span>
       </div>
+      {snap.phase === 'prep' ? (
+        <button
+          type="button"
+          data-testid="open-button"
+          onClick={() => host.dispatch({ type: 'open' })}
+          className="rounded-md bg-green-600 px-3 py-1 text-sm font-bold text-white shadow hover:bg-green-700"
+        >
+          Open restaurant
+        </button>
+      ) : null}
       <div className="text-amber-950" title="Reputation (0–100)">
         😊 {Math.round(snap.reputation)}
       </div>
@@ -59,7 +72,7 @@ export function Hud() {
             type="button"
             title={`${s === 0 ? 'Pause' : `${s}x`} (${key})`}
             onClick={() => host.setSpeed(s)}
-            className={`rounded-md px-2 py-0.5 text-xs font-bold ${snap.speed === s ? 'bg-red-600 text-white' : 'text-amber-950 hover:bg-amber-200'}`}
+            className={`rounded-md px-1.5 py-0.5 text-xs font-bold ${snap.speed === s ? 'bg-red-600 text-white' : 'text-amber-950 hover:bg-amber-200'}`}
           >
             {label}
           </button>
@@ -72,9 +85,21 @@ export function Hud() {
             type="button"
             title={p.key ? `${p.label} (${p.key})` : p.label}
             onClick={() => setPanel(p.id)}
-            className={`rounded-md px-2 py-1 text-sm font-medium ${panel === p.id ? 'bg-amber-900 text-amber-50' : 'text-amber-950 hover:bg-amber-200'}`}
+            className={`rounded-md px-1.5 py-1 text-sm font-medium ${panel === p.id ? 'bg-amber-900 text-amber-50' : 'text-amber-950 hover:bg-amber-200'}`}
           >
             {p.label}
+          </button>
+        ))}
+        {([-1, 1] as const).map((dir) => (
+          <button
+            key={dir}
+            type="button"
+            title={`Rotate view ${dir < 0 ? 'left' : 'right'} (${dir < 0 ? 'Q' : 'E'})`}
+            aria-label={`Rotate view ${dir < 0 ? 'left' : 'right'}`}
+            onClick={() => window.dispatchEvent(new CustomEvent(ROTATE_EVENT, { detail: dir }))}
+            className="rounded-md px-1 py-1 text-sm text-amber-950 hover:bg-amber-200"
+          >
+            {dir < 0 ? '↺' : '↻'}
           </button>
         ))}
         <button

@@ -1,6 +1,7 @@
 import { ECONOMY, LOT } from '../data/balance'
 import { INGREDIENTS } from '../data/recipes'
 import { STARTER } from '../data/starterLayout'
+import { RUSH_KNOTS } from './customers'
 import { newDayRecord } from './economy'
 import { newInventory } from './inventory'
 import { MAXH, MAXW, newPlacedObject } from './layout'
@@ -11,7 +12,7 @@ import { Sim } from './sim'
 import { generateCandidates } from './staff'
 import { type World, ZONE_DINING, ZONE_KITCHEN, type Zone } from './types'
 
-export const SAVE_VERSION = 1
+export const SAVE_VERSION = 2
 
 /** Empty world with no objects, all-dining zones. */
 export function emptyWorld(seed: number): World {
@@ -49,12 +50,14 @@ export function emptyWorld(seed: number): World {
     stars: 1,
     winSeen: false,
     dismissedHints: [],
+    rush: new Array<number>(RUSH_KNOTS).fill(1),
   }
 }
 
 /** New game: starter layout and stock, no staff, a fresh candidate pool. */
 export function newGame(seed: number): Sim {
   const w = emptyWorld(seed)
+  w.clock.phase = 'prep'
   for (let y = STARTER.kitchenFromRow; y < MAXH; y++)
     for (let x = 0; x < MAXW; x++) w.layout.zones[y * MAXW + x] = ZONE_KITCHEN
   const sim = new Sim(w)

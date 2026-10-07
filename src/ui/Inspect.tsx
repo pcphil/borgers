@@ -45,7 +45,10 @@ export function Inspect() {
         <Row k="Type" v={g.takeout ? 'Takeout' : 'Dine-in'} />
         {order ? <Row k="Order" v={order.items.map((i) => MENU[i.menu].name).join(', ')} /> : null}
         {order ? <Row k="Paid" v={money(order.price)} /> : null}
-        {g.state !== 'eating' && g.state !== 'leaving' ? (
+        {g.state !== 'eating' &&
+        g.state !== 'leaving' &&
+        g.state !== 'arriving' &&
+        g.state !== 'departing' ? (
           <Row k="Patience left" v={secs(patienceLeft)} />
         ) : null}
         {g.complaint ? (

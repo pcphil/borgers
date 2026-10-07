@@ -21,6 +21,16 @@ export const LOT = {
   expansionCost: 600_000,
 }
 
+/** The street in front of the lot (tile rows -2.5..-0.5); customers walk its lane to the door. */
+export const STREET = {
+  laneY: -1.5,
+  /** How far beyond the lot's side edges customers appear and disappear, in tiles. */
+  spawnDistance: 18,
+}
+
+/** Per-day demand modulation: hourly knots drawn in [min, max], normalized to keep daily totals. */
+export const RUSH = { min: 0.55, max: 1.45 }
+
 export const ECONOMY = {
   startingCash: 500_000,
   rentPerDay: 15_000,

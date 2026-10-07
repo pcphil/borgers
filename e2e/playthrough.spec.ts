@@ -41,7 +41,8 @@ test('playthrough: hire, build during service, reach 3 stars, save/export/import
   await expect(page.getByText(/Your team \(3\)/i)).toBeVisible()
   await page.keyboard.press('h')
 
-  // Let service run, then place a trash bin by clicking the floor while customers are inside.
+  // Open the restaurant and let service run, then place a trash bin by clicking the floor while customers are inside.
+  await page.getByTestId('open-button').click()
   await page.getByRole('button', { name: '▶▶▶' }).click()
   await page.waitForFunction(
     () => Object.keys((window as any).borgers.host.sim.world.groups).length > 0,

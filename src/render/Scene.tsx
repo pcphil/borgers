@@ -4,10 +4,12 @@ import { useUI } from '../app/store'
 import { Agents } from './Agents'
 import { BuildPreview } from './BuildPreview'
 import { CameraRig } from './CameraRig'
+import { Door } from './Door'
 import { Ground } from './Ground'
 import { Labels } from './Labels'
 import { Lighting } from './Lighting'
 import { Objects } from './Objects'
+import { Walls } from './Walls'
 
 const Perf = import.meta.env.DEV
   ? lazy(() => import('r3f-perf').then((m) => ({ default: m.Perf })))
@@ -36,6 +38,8 @@ export function Scene() {
       <CameraRig />
       <Lighting />
       <Ground />
+      <Walls />
+      <Door />
       <Objects />
       <Agents />
       <Labels />

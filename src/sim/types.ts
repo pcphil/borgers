@@ -66,11 +66,15 @@ export type GroupState =
   | 'toSeat'
   | 'eating'
   | 'leaving'
+  | 'arriving'
+  | 'departing'
 
 export type Group = Agent & {
   id: Id
   size: number
   takeout: boolean
+  /** Street end the group came from (-1 left, 1 right); it leaves the same way. */
+  side: -1 | 1
   state: GroupState
   /** Ticks spent in current state. */
   timer: number
@@ -186,7 +190,7 @@ export type DayRecord = {
   deliveryTruncated: number
 }
 
-export type Phase = 'open' | 'closing' | 'night'
+export type Phase = 'prep' | 'open' | 'closing' | 'night'
 
 export type Clock = {
   day: number
@@ -224,6 +228,8 @@ export type World = {
   stars: number
   winSeen: boolean
   dismissedHints: string[]
+  /** Per-day demand multipliers at hour boundaries 10:00..22:00 (all 1 until the day opens). */
+  rush: number[]
 }
 
 export type SimEvent =

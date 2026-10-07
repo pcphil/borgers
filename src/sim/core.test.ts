@@ -91,7 +91,7 @@ describe('clock (2.4)', () => {
     }
     expect(sim.world.nextId).toBeGreaterThanOrEqual(before)
   })
-  it('night lasts NIGHT_TICKS and starts the next day at 10:00', () => {
+  it('night lasts NIGHT_TICKS and the next day waits in prep at 10:00', () => {
     const sim = makeSim({ objects: BASIC_OBJECTS })
     while (sim.world.clock.phase !== 'night') sim.step()
     let n = 0
@@ -102,6 +102,7 @@ describe('clock (2.4)', () => {
     expect(n).toBe(NIGHT_TICKS)
     expect(sim.world.clock.day).toBe(2)
     expect(sim.world.clock.tick).toBe(0)
+    expect(sim.world.clock.phase).toBe('prep')
   })
 })
 

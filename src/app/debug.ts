@@ -37,7 +37,7 @@ function stress(agents = 100, objects = 150) {
   for (const c of [...w.candidates]) sim.dispatch({ type: 'hire', candidateId: c.id })
   let people = Object.keys(w.staff).length
   while (people < agents) {
-    const g = spawnGroup(sim)
+    const g = spawnGroup(sim, { atDoor: true })
     g.size = Math.min(4, agents - people)
     g.angry = false
     g.state = 'leaving'

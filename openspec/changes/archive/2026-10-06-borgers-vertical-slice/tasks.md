@@ -6,7 +6,7 @@
 - [x] 1.4 Add Playwright with a placeholder "page loads" test; verify `pnpm playwright test` passes locally
 - [x] 1.5 Add Tailwind; verify a utility class renders styled in the dev page
 - [x] 1.6 Create `src/{sim,data,save,render,ui,audio,app}` structure and a lint/grep check that bans `react`, `three`, `Math.random`, `Date.now`, `performance.now` imports/usages inside `src/sim`; verify the check fails on a deliberate violation
-- [ ] 1.7 Add GitHub Actions workflow (biome ci, tsc --noEmit, vitest, playwright, build, deploy to Pages on main with Vite `base`); verify workflow runs green and the Pages URL serves the app
+- [x] 1.7 Add GitHub Actions workflow (biome ci, tsc --noEmit, vitest, playwright, build, deploy to Pages on main with Vite `base`); verify workflow runs green and the Pages URL serves the app
 
 ## 2. Sim core
 
@@ -116,4 +116,4 @@
 - [x] 14.1 Replace placeholder Playwright test with smoke test: load app, start new game, canvas renders, clock advances; verify passes in CI
 - [x] 14.2 Balance pass using `scripts/simulate.ts`: tune `balance.ts` so a reasonable strategy reaches 2★ within ~5 days and 5★ within ~30 days without loans; record results in this change
 - [x] 14.3 Full manual playthrough from new game to 3★ including save/load, export/import and building during service; fix blocking bugs found
-- [ ] 14.4 Deploy to GitHub Pages and verify the public URL runs a full day
+- [x] 14.4 Deploy to GitHub Pages and verify the public URL runs a full day

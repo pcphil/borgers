@@ -6,6 +6,8 @@ export function runDays(sim: Sim, days: number, onTick?: (sim: Sim) => void): nu
   let n = 0
   const limit = days * 20_000 + 20_000
   while (sim.world.clock.day < target) {
+    // Headless days open themselves; the interactive game waits for the player.
+    if (sim.world.clock.phase === 'prep') sim.dispatch({ type: 'open' })
     sim.step()
     sim.drainEvents()
     onTick?.(sim)

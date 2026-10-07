@@ -143,8 +143,7 @@ export function bakeCharacter(
   const c = bb.getCenter(new Vector3())
   merged.translate(-c.x, -bb.min.y, -c.z)
   merged.scale(s, s, s)
-  // Characters face +z in the source; rotate so local -z is "forward" like our other models.
-  merged.rotateY(Math.PI)
+  // Characters face +z in the source and Agents yaws them with atan2(dx, dz), so keep +z forward.
   return { geometry: merged, material }
 }
 

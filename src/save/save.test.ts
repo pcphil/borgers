@@ -10,6 +10,7 @@ import { AUTO_SLOT, idbKV, memoryKV, openKV, SaveSlots } from './slots'
 const busyGame = () => {
   const sim = newGame(11)
   for (const c of [...sim.world.candidates]) sim.dispatch({ type: 'hire', candidateId: c.id })
+  sim.dispatch({ type: 'open' })
   runTicks(sim, 2000) // mid-service: customers, orders and tasks in flight
   return sim
 }
@@ -36,7 +37,51 @@ describe('versioning (10.2)', () => {
     expect(save.world.winSeen).toBe(false)
     expect(save.world.dismissedHints).toEqual([])
     expect(save.version).toBe(SAVE_VERSION)
-    expect(migrate({}, 0).version).toBe(1)
+    expect(migrate({}, 0).version).toBe(SAVE_VERSION)
+  })
+  it('migrates v1 saves: neutral rush, groups get a street side, phase kept', () => {
+    const sim = newGame(2)
+    sim.dispatch({ type: 'open' })
+    for (const c of [...sim.world.candidates]) sim.dispatch({ type: 'hire', candidateId: c.id })
+    runTicks(sim, 3000) // customers inside, mid-day
+    const v1 = JSON.parse(JSON.stringify(sim.world))
+    v1.version = 1
+    delete v1.rush
+    for (const g of Object.values(v1.groups) as Record<string, unknown>[]) {
+      g.side = undefined
+      // v1 groups had no street legs: they are all inside the lot.
+      if (g.state === 'arriving' || g.state === 'departing') g.state = 'toQueue'
+    }
+    const save = deserialize({ format: 'borgers-save', version: 1, savedAt: '', world: v1 })
+    expect(save.version).toBe(SAVE_VERSION)
+    expect(save.world.rush).toEqual(new Array(13).fill(1))
+    expect(save.world.clock.phase).toBe('open')
+    for (const g of Object.values(save.world.groups)) expect(g.side).toBe(1)
+    const loaded = toSim(save)
+    runTicks(loaded, 1000) // keeps running
+    expect(loaded.world.clock.tick).toBeGreaterThan(3000)
+  })
+  it('a v1 night save resumes the night and then waits in prep', () => {
+    const sim = newGame(3)
+    sim.dispatch({ type: 'open' })
+    while (sim.world.clock.phase !== 'night') sim.step()
+    const v1 = JSON.parse(JSON.stringify(sim.world))
+    v1.version = 1
+    delete v1.rush
+    const loaded = toSim(
+      deserialize({ format: 'borgers-save', version: 1, savedAt: '', world: v1 }),
+    )
+    while (loaded.world.clock.phase === 'night') loaded.step()
+    expect(loaded.world.clock.phase).toBe('prep')
+    expect(loaded.world.clock.day).toBe(2)
+  })
+  it('a v0 save chains through every migration', () => {
+    const v0 = JSON.parse(JSON.stringify(newGame(1).world))
+    for (const k of ['winSeen', 'dismissedHints', 'rush']) delete v0[k]
+    v0.version = 0
+    const save = deserialize({ format: 'borgers-save', version: 0, savedAt: '', world: v0 })
+    expect(save.world.rush).toHaveLength(13)
+    expect(save.world.dismissedHints).toEqual([])
   })
   it('refuses saves from a newer version', () => {
     const s = { ...serialize(newGame(1)), version: SAVE_VERSION + 1 }
@@ -106,6 +151,7 @@ describe('autosave (10.5)', () => {
   })
   it('night settlement emits an autosave event', () => {
     const sim = newGame(1)
+    sim.dispatch({ type: 'open' })
     let saw = false
     while (sim.world.clock.phase !== 'night') {
       sim.step()

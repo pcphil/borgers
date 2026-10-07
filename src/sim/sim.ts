@@ -2,7 +2,7 @@ import { ECONOMY, LOT, NIGHT_TICKS, OPEN_TICKS } from '../data/balance'
 import { CATALOGUE, type ObjectDefId } from '../data/catalogue'
 import type { Ingredient, MenuItemId } from '../data/recipes'
 import { isUnlocked, type Role } from '../data/unlocks'
-import { arrivalSystem, customerSystem, releaseGroupsAt } from './customers'
+import { arrivalSystem, customerSystem, drawRush, releaseGroupsAt } from './customers'
 import { canAfford, newDayRecord, refund, repayLoan, spend, takeLoan } from './economy'
 import { footprintTiles, type Placement } from './geometry'
 import { computeHints, type Hint } from './hints'
@@ -42,6 +42,7 @@ export type Command =
   | { type: 'repayLoan' }
   | { type: 'dismissHint'; id: string }
   | { type: 'ackWin' }
+  | { type: 'open' }
 
 export type CommandResult = { ok: true; id?: Id } | { ok: false; reason: LayoutError | string }
 
@@ -128,6 +129,7 @@ export class Sim {
 
   private clockSystem() {
     const c = this.world.clock
+    if (c.phase === 'prep') return
     if (c.phase === 'open') {
       c.tick++
       if (c.tick >= OPEN_TICKS) c.phase = 'closing'
@@ -172,8 +174,17 @@ export class Sim {
     w.clock.day++
     w.clock.tick = 0
     w.clock.nightTick = 0
+    w.clock.phase = 'prep'
+  }
+
+  /** Player opens the restaurant: starts the day clock, stamps who is paid, draws today's rush. */
+  private openRestaurant(): CommandResult {
+    const w = this.world
+    if (w.clock.phase !== 'prep') return fail('notPreparing')
     w.clock.phase = 'open'
     for (const s of Object.values(w.staff)) s.employedAtOpen = s.state !== 'leaving'
+    w.rush = drawRush(w)
+    return OK
   }
 
   // ---------------- commands ----------------
@@ -296,6 +307,8 @@ export class Sim {
       case 'ackWin':
         w.winSeen = true
         return OK
+      case 'open':
+        return this.openRestaurant()
     }
   }
 

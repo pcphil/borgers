@@ -8,6 +8,7 @@ import { CUSTOMERS } from '../data/balance'
 import type { Role } from '../data/unlocks'
 import type { Agent, Group, PlacedObject, World } from '../sim/types'
 import { objectTransform } from './coords'
+import { moveYaw } from './facing'
 import { type BakedCharacter, bakeCharacter, CHARACTER_URLS } from './kenney'
 
 const MAX_CUSTOMERS = CUSTOMERS.maxActiveGroups * 4
@@ -101,6 +102,8 @@ type Figure = {
   seated: boolean
   /** Yaw to face when seated (toward the table centre). */
   faceYaw: number | null
+  /** Yaw of this tick's movement (sim `prev -> pos`), null when standing still. */
+  moveYaw: number | null
   variant: number
   /** Role colour (staff) used for hats and capsule bodies. */
   color: string | null
@@ -122,6 +125,7 @@ function figures(w: World, alpha: number, staff: boolean): Figure[] {
         moving: s.pos.x !== s.prev.x || s.pos.y !== s.prev.y,
         seated: false,
         faceYaw: null,
+        moveYaw: moveYaw(s.prev, s.pos),
         variant: s.id % 8,
         color: ROLE_COLOR[s.role],
         angry: false,
@@ -145,6 +149,7 @@ function figures(w: World, alpha: number, staff: boolean): Figure[] {
         moving,
         seated: false,
         faceYaw: null,
+        moveYaw: moveYaw(g.prev, g.pos),
         variant: (g.id * 3 + m) % 8,
         color: null,
         angry: g.angry,
@@ -169,17 +174,10 @@ function figures(w: World, alpha: number, staff: boolean): Figure[] {
 
 /** Remember each figure's facing so standing agents keep looking where they last walked. */
 function useFacing() {
-  const yaw = useRef(new Map<number, { x: number; z: number; yaw: number }>())
+  const yaw = useRef(new Map<number, number>())
   return (f: Figure) => {
-    const prev = yaw.current.get(f.key)
-    let y = prev?.yaw ?? Math.PI
-    if (f.faceYaw !== null) y = f.faceYaw
-    else if (prev) {
-      const dx = f.x - prev.x
-      const dz = f.z - prev.z
-      if (dx * dx + dz * dz > 1e-5) y = Math.atan2(dx, dz)
-    }
-    yaw.current.set(f.key, { x: f.x, z: f.z, yaw: y })
+    const y = f.faceYaw ?? f.moveYaw ?? yaw.current.get(f.key) ?? Math.PI
+    yaw.current.set(f.key, y)
     return y
   }
 }

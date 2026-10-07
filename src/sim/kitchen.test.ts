@@ -79,8 +79,8 @@ describe('register queue (5.4)', () => {
   it('line advances when the front group orders', () => {
     const sim = makeSim({ objects: BASIC_OBJECTS, stock: BASIC_STOCK })
     addStaff(sim, 'cashier', { service: 1 })
-    const a = spawnGroup(sim)
-    const b = spawnGroup(sim)
+    const a = spawnGroup(sim, { atDoor: true })
+    const b = spawnGroup(sim, { atDoor: true })
     const reg = find(sim, 'register')
     expect(reg.queue).toEqual([a.id, b.id])
     stepUntil(sim, () => a.state === 'toWait' || a.state === 'waitingFood')
@@ -91,8 +91,8 @@ describe('register queue (5.4)', () => {
     const sim = makeSim({ objects: BASIC_OBJECTS, stock: BASIC_STOCK })
     const reg = find(sim, 'register')
     const n = queueSlots(sim, reg).length
-    for (let i = 0; i < n; i++) spawnGroup(sim)
-    const late = spawnGroup(sim)
+    for (let i = 0; i < n; i++) spawnGroup(sim, { atDoor: true })
+    const late = spawnGroup(sim, { atDoor: true })
     expect(late.angry).toBe(true)
     expect(late.complaint).toBe('lineTooLong')
   })
@@ -102,7 +102,7 @@ describe('inventory (6.1, 6.2)', () => {
   it('consumes ingredients when the step starts, not when ordered', () => {
     const sim = makeSim({ objects: BASIC_OBJECTS, stock: BASIC_STOCK })
     const cook = addStaff(sim, 'cook', {}, { x: 3, y: 6 })
-    const g = spawnGroup(sim)
+    const g = spawnGroup(sim, { atDoor: true })
     createOrder(sim, g.id, ['classic'], 600)
     expect(sim.world.inventory.stock.patty).toBe(40)
     expect(sim.world.inventory.reserved.patty).toBe(1)
@@ -151,7 +151,7 @@ describe('menu (6.3)', () => {
     sim.dispatch({ type: 'setMenu', item: 'classic', patch: { price: 750 } })
     expect(sim.world.menu.classic.price).toBe(750)
     addStaff(sim, 'cashier')
-    for (let i = 0; i < 20; i++) spawnGroup(sim)
+    for (let i = 0; i < 20; i++) spawnGroup(sim, { atDoor: true })
     stepUntil(sim, () => Object.keys(sim.world.orders).length >= 3)
     for (const o of Object.values(sim.world.orders))
       expect(o.items.some((i) => i.menu === 'soda')).toBe(false)
@@ -165,7 +165,7 @@ describe('menu (6.3)', () => {
 describe('order pipeline (6.4, 6.6)', () => {
   it('Classic + Soda generates grill and soda steps, then assembly, then delivery', () => {
     const sim = makeSim({ objects: BASIC_OBJECTS, stock: BASIC_STOCK })
-    const g = spawnGroup(sim)
+    const g = spawnGroup(sim, { atDoor: true })
     const o = createOrder(sim, g.id, ['classic', 'soda'], 800)
     const kinds = () =>
       Object.values(sim.world.tasks)
@@ -182,7 +182,7 @@ describe('order pipeline (6.4, 6.6)', () => {
     addStaff(sim, 'cashier', { service: 1 })
     addStaff(sim, 'cook', { speed: 1 })
     addStaff(sim, 'assembler', { speed: 1 })
-    const g = spawnGroup(sim)
+    const g = spawnGroup(sim, { atDoor: true })
     g.patience = { queue: 100_000, food: 100_000, seat: 100_000 }
     stepUntil(sim, () => g.orderId !== null)
     const order = sim.world.orders[g.orderId as number]
@@ -198,7 +198,7 @@ describe('order pipeline (6.4, 6.6)', () => {
 describe('stations (6.5, 6.7)', () => {
   it('grill capacity limits concurrent steps', () => {
     const sim = makeSim({ objects: BASIC_OBJECTS, stock: BASIC_STOCK })
-    const g = spawnGroup(sim)
+    const g = spawnGroup(sim, { atDoor: true })
     createOrder(sim, g.id, ['classic', 'classic', 'classic'], 1800)
     const cooks = [0, 1, 2].map(() => addStaff(sim, 'cook', {}, { x: 3, y: 6 }))
     for (let i = 0; i < 3; i++) sim.step()
@@ -212,7 +212,7 @@ describe('stations (6.5, 6.7)', () => {
       find(sim, 'grill').tier = tier
       addStaff(sim, 'cook', { cooking }, { x: 3, y: 6 })
       addStaff(sim, 'assembler', { cooking }, { x: 5, y: 7 })
-      const g = spawnGroup(sim)
+      const g = spawnGroup(sim, { atDoor: true })
       const o = createOrder(sim, g.id, ['classic'], 600)
       stepUntil(sim, () => o.state === 'delivering' || o.state === 'ready')
       return o.quality
@@ -232,7 +232,7 @@ describe('stations (6.5, 6.7)', () => {
   it('selling a grill mid-cook refunds the patty and requeues the step', () => {
     const sim = makeSim({ objects: BASIC_OBJECTS, stock: BASIC_STOCK })
     const cook = addStaff(sim, 'cook', {}, { x: 3, y: 6 }) as Staff
-    const g = spawnGroup(sim)
+    const g = spawnGroup(sim, { atDoor: true })
     const o = createOrder(sim, g.id, ['classic'], 600)
     stepUntil(sim, () => cook.state === 'working')
     expect(sim.world.inventory.stock.patty).toBe(39)

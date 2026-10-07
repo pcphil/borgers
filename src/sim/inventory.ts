@@ -65,6 +65,7 @@ export function unconsume(w: World, need: Partial<Record<Ingredient, number>>) {
 }
 
 export function setTarget(sim: Sim, i: Ingredient, n: number) {
+  if (!Number.isFinite(n)) return
   sim.world.inventory.targets[i] = Math.max(0, Math.floor(n))
 }
 
@@ -75,7 +76,7 @@ export function setAuto(sim: Sim, i: Ingredient, on: boolean) {
 /** Manual order: paid now, delivered at next settlement. */
 export function manualOrder(sim: Sim, i: Ingredient, n: number): boolean {
   const qty = Math.floor(n)
-  if (qty <= 0) return false
+  if (!Number.isFinite(qty) || qty <= 0) return false
   const cost = qty * INGREDIENT_COST[i]
   if (!canAfford(sim, cost)) return false
   spend(sim, cost, 'ingredients')

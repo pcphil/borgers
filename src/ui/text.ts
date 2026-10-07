@@ -44,6 +44,8 @@ export const GROUP_STATE_TEXT: Record<GroupState, string> = {
   toSeat: 'Walking to a table',
   eating: 'Eating',
   leaving: 'Leaving',
+  arriving: 'Walking to the door',
+  departing: 'Heading home',
 }
 
 export const STAFF_STATE_TEXT: Record<StaffState, string> = {
