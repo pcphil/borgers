@@ -47,7 +47,7 @@ describe('hire / fire / wages (7.2)', () => {
   it('firing mid-grill returns the step to the queue (ingredients kept) and the cook walks out', () => {
     const sim = makeSim({ objects: BASIC_OBJECTS, stock: BASIC_STOCK })
     const cook = addStaff(sim, 'cook', {}, { x: 3, y: 6 })
-    const g = spawnGroup(sim)
+    const g = spawnGroup(sim, { atDoor: true })
     const o = createOrder(sim, g.id, ['classic'], 600)
     stepUntil(sim, () => cook.state === 'working')
     sim.dispatch({ type: 'fire', staffId: cook.id })
@@ -78,7 +78,7 @@ describe('roles and task selection (7.3)', () => {
   it('reassigning a cook to cashier: finishes step, then goes to register', () => {
     const sim = makeSim({ objects: BASIC_OBJECTS, stock: BASIC_STOCK })
     const cook = addStaff(sim, 'cook', {}, { x: 3, y: 6 })
-    const g = spawnGroup(sim)
+    const g = spawnGroup(sim, { atDoor: true })
     const o = createOrder(sim, g.id, ['classic'], 600)
     stepUntil(sim, () => cook.state === 'working')
     sim.dispatch({ type: 'setRole', staffId: cook.id, role: 'cashier' })
@@ -94,7 +94,7 @@ describe('roles and task selection (7.3)', () => {
     const far = find(sim, 'grill')
     const near = Object.values(sim.world.objects).filter((o) => o.def === 'grill')[1]!
     const cook = addStaff(sim, 'cook', {}, { x: 1, y: 5 })
-    const g = spawnGroup(sim)
+    const g = spawnGroup(sim, { atDoor: true })
     createOrder(sim, g.id, ['classic'], 600)
     sim.step()
     expect(cook.stationId).toBe(near.id)
@@ -102,7 +102,7 @@ describe('roles and task selection (7.3)', () => {
   })
   it('no cashier -> no orders taken and a hint', () => {
     const sim = makeSim({ objects: BASIC_OBJECTS, stock: BASIC_STOCK })
-    const g = spawnGroup(sim)
+    const g = spawnGroup(sim, { atDoor: true })
     for (let i = 0; i < 200; i++) sim.step()
     expect(g.orderId).toBeNull()
     expect(computeHints(sim.world).map((h) => h.id)).toContain('no-cashier')
@@ -168,7 +168,7 @@ describe('customer exits (8.2, 8.4)', () => {
   }
   it('waits too long for food -> leaves angry, order cancelled, reservations released', () => {
     const sim = kitchenless()
-    const g = spawnGroup(sim)
+    const g = spawnGroup(sim, { atDoor: true })
     stepUntil(sim, () => g.orderId !== null)
     const orderId = g.orderId as number
     stepUntil(sim, () => g.state === 'leaving')
@@ -178,7 +178,7 @@ describe('customer exits (8.2, 8.4)', () => {
   })
   it('paid before leaving: no refund', () => {
     const sim = kitchenless()
-    const g = spawnGroup(sim)
+    const g = spawnGroup(sim, { atDoor: true })
     stepUntil(sim, () => g.orderId !== null)
     const cash = sim.world.economy.cash
     stepUntil(sim, () => g.state === 'leaving')
@@ -186,7 +186,7 @@ describe('customer exits (8.2, 8.4)', () => {
   })
   it('queue patience expiry -> leaves', () => {
     const sim = makeSim({ objects: BASIC_OBJECTS, stock: BASIC_STOCK })
-    const g = spawnGroup(sim)
+    const g = spawnGroup(sim, { atDoor: true })
     stepUntil(sim, () => g.state === 'leaving')
     expect(g.complaint).toBe('lineTooLong')
     stepUntil(sim, () => sim.world.groups[g.id] === undefined)
@@ -194,7 +194,7 @@ describe('customer exits (8.2, 8.4)', () => {
   })
   it('group of 3 needs a 4-seat table', () => {
     const sim = makeSim({ objects: BASIC_OBJECTS })
-    const g = spawnGroup(sim)
+    const g = spawnGroup(sim, { atDoor: true })
     g.size = 3
     g.takeout = false
     g.state = 'seeking'
@@ -207,7 +207,7 @@ describe('customer exits (8.2, 8.4)', () => {
     const sim = makeSim({ objects: BASIC_OBJECTS })
     for (const o of Object.values(sim.world.objects))
       if (o.def.startsWith('table')) o.occupiedBy = 999
-    const g = spawnGroup(sim)
+    const g = spawnGroup(sim, { atDoor: true })
     g.takeout = false
     g.state = 'seeking'
     g.timer = 0
@@ -216,7 +216,7 @@ describe('customer exits (8.2, 8.4)', () => {
   })
   it('payment happens at order time', () => {
     const sim = kitchenless()
-    const g = spawnGroup(sim)
+    const g = spawnGroup(sim, { atDoor: true })
     const cash = sim.world.economy.cash
     stepUntil(sim, () => g.orderId !== null)
     const order = sim.world.orders[g.orderId as number]
@@ -236,7 +236,7 @@ describe('ordering choice (8.3)', () => {
       addStaff(sim, 'cashier', { service: 1 })
       let cheese = 0
       for (let i = 0; i < 30; i++) {
-        const g = spawnGroup(sim)
+        const g = spawnGroup(sim, { atDoor: true })
         g.patience.queue = 1_000_000
         stepUntil(sim, () => g.orderId !== null || g.angry)
         const o = g.orderId !== null ? sim.world.orders[g.orderId] : undefined
@@ -257,7 +257,7 @@ describe('dirt, trash, cleaning (8.5)', () => {
       let trash = 0
       for (let seed = 1; seed <= 15; seed++) {
         const sim = makeSim({ seed, objects: objs })
-        const g = spawnGroup(sim)
+        const g = spawnGroup(sim, { atDoor: true })
         g.size = 2
         g.takeout = false
         g.state = 'seeking'
@@ -274,7 +274,7 @@ describe('dirt, trash, cleaning (8.5)', () => {
   it('dirty tables are not used until cleaned', () => {
     const sim = makeSim({ objects: BASIC_OBJECTS, stock: BASIC_STOCK })
     for (const o of Object.values(sim.world.objects)) if (o.def.startsWith('table')) o.dirty = true
-    const g = spawnGroup(sim)
+    const g = spawnGroup(sim, { atDoor: true })
     g.takeout = false
     g.state = 'seeking'
     sim.step()
@@ -284,7 +284,7 @@ describe('dirt, trash, cleaning (8.5)', () => {
   it('cleaner cleans dirty table', () => {
     const sim = makeSim({ objects: BASIC_OBJECTS, stars: 2 })
     addStaff(sim, 'cleaner')
-    const g = spawnGroup(sim)
+    const g = spawnGroup(sim, { atDoor: true })
     g.size = 2
     g.takeout = false
     g.state = 'seeking'
@@ -296,7 +296,7 @@ describe('dirt, trash, cleaning (8.5)', () => {
 describe('satisfaction and reputation (8.6)', () => {
   it('fast fair clean visit scores high; angry scores low', () => {
     const sim = makeSim()
-    const g = { ...spawnGroup(sim) } as Group
+    const g = { ...spawnGroup(sim, { atDoor: true }) } as Group
     g.takeout = true
     g.queueWait = 0
     g.foodWait = 0

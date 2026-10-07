@@ -8,7 +8,7 @@ import { hashWorld } from './hash'
 import { pick, randInt, randRange, seedRng } from './rng'
 import { runDays } from './runner'
 import type { Command, Sim } from './sim'
-import { checkInvariants } from './testkit'
+import { checkInvariants, openIfPrep } from './testkit'
 import type { Rot } from './types'
 import { newGame } from './world'
 
@@ -23,6 +23,7 @@ describe('save/load mid-day', () => {
   it('a reloaded world continues identically to the original', () => {
     const sim = newGame(5)
     hireAll(sim)
+    sim.dispatch({ type: 'open' })
     // Mid-day with customers in every state: step until groups exist and orders are in flight.
     for (let i = 0; i < 2600; i++) sim.step()
     sim.drainEvents()
@@ -42,6 +43,7 @@ describe('save/load mid-day', () => {
   it('saving does not alias live state', () => {
     const sim = newGame(6)
     hireAll(sim)
+    sim.dispatch({ type: 'open' })
     for (let i = 0; i < 400; i++) sim.step()
     const save = serialize(sim)
     const before = hashWorld(save.world)
@@ -125,6 +127,7 @@ describe('command fuzz', () => {
           const r = sim.dispatch(cmd)
           if (r.ok) accepted[cmd.type] = (accepted[cmd.type] ?? 0) + 1
         }
+        openIfPrep(sim)
         sim.step()
         sim.drainEvents()
         if (tick % 101 === 0) checkInvariants(sim)
@@ -165,6 +168,7 @@ describe('command fuzz', () => {
           item: pick(rng, MENU_ITEM_IDS),
           patch: { enabled: randRange(rng, 0, 1) > 0.5, price: randInt(rng, 100, 2500) },
         })
+      openIfPrep(sim)
       sim.step()
       sim.drainEvents()
       if (tick % 53 === 0) checkInvariants(sim)

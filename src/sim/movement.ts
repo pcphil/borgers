@@ -76,7 +76,17 @@ export function move(
   if (!a.target) return 'arrived'
   if (a.pathVersion !== sim.world.layout.version) repath(sim, a, customer)
   if (a.navFailed) return 'failed'
-  let budget = tilesPerSecond / TICKS_PER_SECOND
+  advance(a, tilesPerSecond / TICKS_PER_SECOND)
+  if (a.pathIdx >= a.path.length) {
+    a.pos.x = a.target.x
+    a.pos.y = a.target.y
+    return 'arrived'
+  }
+  return 'moving'
+}
+
+/** Move along `a.path` from `pathIdx` by `budget` tiles (Manhattan, as paths are axis-aligned). */
+function advance(a: Agent, budget: number) {
   while (budget > 0 && a.pathIdx < a.path.length) {
     const next = a.path[a.pathIdx] as Vec
     const dx = next.x - a.pos.x
@@ -93,10 +103,23 @@ export function move(
       budget = 0
     }
   }
-  if (a.pathIdx >= a.path.length) {
-    a.pos.x = a.target.x
-    a.pos.y = a.target.y
-    return 'arrived'
-  }
-  return 'moving'
+}
+
+/**
+ * Walk a scripted route (`a.path` from `pathIdx`) outside the grid, e.g. along the street.
+ * Ignores occupancy, the path cache and the layout version. Returns 'arrived' at the last waypoint.
+ */
+export function walkRoute(a: Agent, tilesPerSecond: number): 'arrived' | 'moving' {
+  a.prev.x = a.pos.x
+  a.prev.y = a.pos.y
+  advance(a, tilesPerSecond / TICKS_PER_SECOND)
+  return a.pathIdx >= a.path.length ? 'arrived' : 'moving'
+}
+
+/** Give an agent a scripted route starting from where it stands. */
+export function setRoute(a: Agent, route: Vec[]) {
+  a.path = route
+  a.pathIdx = 0
+  a.target = null
+  a.navFailed = false
 }

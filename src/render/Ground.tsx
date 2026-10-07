@@ -1,10 +1,9 @@
-import { Line } from '@react-three/drei'
 import type { ThreeEvent } from '@react-three/fiber'
 import { useLayoutEffect, useRef } from 'react'
 import { Color, type InstancedMesh, Object3D } from 'three'
 import { host } from '../app/host'
 import { useUI } from '../app/store'
-import { LOT } from '../data/balance'
+import { LOT, STREET } from '../data/balance'
 import { idx, MAXH, MAXW, zoneAt } from '../sim/layout'
 import { ZONE_KITCHEN } from '../sim/types'
 import { reasonText } from '../ui/text'
@@ -14,6 +13,32 @@ const tmp = new Object3D()
 const col = new Color()
 const DINING = ['#e9d8b4', '#e2cfa8']
 const KITCHEN = ['#c9d2d6', '#bcc6cb']
+
+/** Ground wide enough that customers appear from beyond the default view at either end. */
+const GROUND_W = MAXW + 2 * STREET.spawnDistance + 60
+
+/** Dashed centre line down the street. */
+function StreetMarkings() {
+  const ref = useRef<InstancedMesh>(null)
+  const count = Math.floor(GROUND_W / 2)
+  useLayoutEffect(() => {
+    const m = ref.current
+    if (!m) return
+    for (let i = 0; i < count; i++) {
+      tmp.position.set(MAXW / 2 - GROUND_W / 2 + i * 2 + 1, 0.0, STREET.laneY - 0.55)
+      tmp.rotation.set(-Math.PI / 2, 0, 0)
+      tmp.updateMatrix()
+      m.setMatrixAt(i, tmp.matrix)
+    }
+    m.instanceMatrix.needsUpdate = true
+  }, [count])
+  return (
+    <instancedMesh ref={ref} args={[undefined, undefined, count]} frustumCulled={false}>
+      <planeGeometry args={[0.9, 0.08]} />
+      <meshStandardMaterial color="#e8e0b0" />
+    </instancedMesh>
+  )
+}
 
 function Tiles() {
   const ref = useRef<InstancedMesh>(null)
@@ -138,31 +163,20 @@ export function Ground() {
         position={[MAXW / 2, -0.01, MAXH / 2 - 3]}
         receiveShadow
       >
-        <planeGeometry args={[MAXW + 30, MAXH + 30]} />
+        <planeGeometry args={[GROUND_W, MAXH + 60]} />
         <meshStandardMaterial color="#8fb06b" />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[MAXW / 2, -0.005, -1.5]} receiveShadow>
-        <planeGeometry args={[MAXW + 30, 2]} />
-        <meshStandardMaterial color="#b8b8b0" />
+        <planeGeometry args={[GROUND_W, 2]} />
+        <meshStandardMaterial color="#6f7377" />
       </mesh>
+      <StreetMarkings />
       <Tiles />
       {/* Entrance mat */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[LOT.entranceX, 0.01, 0]}>
         <planeGeometry args={[0.9, 0.9]} />
         <meshStandardMaterial color="#8c2f2f" />
       </mesh>
-      {/* Lot outline */}
-      <Line
-        points={[
-          [-0.5, 0.03, -0.5],
-          [lot.w - 0.5, 0.03, -0.5],
-          [lot.w - 0.5, 0.03, lot.h - 0.5],
-          [-0.5, 0.03, lot.h - 0.5],
-          [-0.5, 0.03, -0.5],
-        ]}
-        color="#5a4632"
-        lineWidth={2}
-      />
       <mesh
         rotation={[-Math.PI / 2, 0, 0]}
         position={[MAXW / 2, 0.005, MAXH / 2]}

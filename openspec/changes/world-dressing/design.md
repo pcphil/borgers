@@ -18,7 +18,7 @@ See proposal.md for motivation. Current state relevant here (observed in code):
 ## Decisions
 
 ### D1. `prep` is a clock phase; opening is a command
-`Phase = 'prep' | 'open' | 'closing' | 'night'`. In `prep`, `clockSystem` does not advance `clock.tick` and `arrivalSystem` is already gated on `open`, so no customers arrive; `staffSystem` and `customerSystem` still run so hired staff walk to stations and cleaners work. `newGame` starts in `prep`; `startDay()` (end of night) sets `prep` instead of `open`. `{ type: 'open' }` is valid only in `prep` (otherwise it returns `fail('notPreparing')`): it sets `open`, stamps `employedAtOpen` (moved out of `startDay`), draws the day's rush pattern (D3) and emits a notice event for audio/toast. `emptyWorld` (used by `makeSim`) stays `open` so existing scenario tests are unaffected.
+`Phase = 'prep' | 'open' | 'closing' | 'night'`. In `prep`, `clockSystem` does not advance `clock.tick` and `arrivalSystem` is already gated on `open`, so no customers arrive; `staffSystem` and `customerSystem` still run so hired staff walk to stations and cleaners work. `newGame` starts in `prep`; `startDay()` (end of night) sets `prep` instead of `open`. `{ type: 'open' }` is valid only in `prep` (otherwise it returns `fail('notPreparing')`): it sets `open`, stamps `employedAtOpen` (moved out of `startDay`), and draws the day's rush pattern (D3). It emits no event (the HUD change is the feedback). `emptyWorld` (used by `makeSim`) stays `open` so existing scenario tests are unaffected.
 *Alternative:* a separate `open: boolean` flag. Rejected: the phase already encodes day state and every consumer (HUD, snapshot clock text, autopilot) switches on it.
 
 ### D2. Headless runners open the restaurant themselves

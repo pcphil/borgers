@@ -1,13 +1,24 @@
-import { CUSTOMERS, REPUTATION, STAFF, TICKS_PER_HOUR, ticks } from '../data/balance'
+import {
+  CUSTOMERS,
+  LOT,
+  OPEN_HOUR,
+  OPEN_TICKS,
+  REPUTATION,
+  RUSH,
+  STAFF,
+  STREET,
+  TICKS_PER_HOUR,
+  ticks,
+} from '../data/balance'
 import { CATALOGUE } from '../data/catalogue'
 import { MENU, MENU_ITEM_IDS, type MenuItemId } from '../data/recipes'
 import { earnSale } from './economy'
 import { accessTiles, frontDir, manhattan, tileOf } from './geometry'
 import { canReserve, release, reserve } from './inventory'
 import { cancelOrder, createOrder, newTask } from './kitchen'
-import { entranceTile, idx, isWalkable } from './layout'
+import { entranceTile, idx, isWalkable, MAXW } from './layout'
 import { attractiveness, isAvailable, itemNeeds, priceFairness } from './menu'
-import { clearTarget, move, newAgent, setTarget } from './movement'
+import { clearTarget, move, newAgent, setRoute, setTarget, walkRoute } from './movement'
 import { distanceField } from './path'
 import { recordVisit } from './reputation'
 import { chance, rand, randInt, randRange, weightedIndex } from './rng'
@@ -28,6 +39,37 @@ export function demandAt(hour: number): number {
   return (c[c.length - 1] as [number, number])[1]
 }
 
+/** Rush knots: one per hour boundary from opening to closing. */
+export const RUSH_KNOTS = 13
+
+/** Linear interpolation of the day's rush multipliers at a game hour. */
+export function rushAt(rush: readonly number[], hour: number): number {
+  const x = Math.min(RUSH_KNOTS - 1, Math.max(0, hour - OPEN_HOUR))
+  const i = Math.min(RUSH_KNOTS - 2, Math.floor(x))
+  const a = rush[i] ?? 1
+  const b = rush[i + 1] ?? 1
+  return a + (b - a) * (x - i)
+}
+
+/**
+ * Draw a day's rush pattern from the world RNG. Knots are rescaled so the expected number of
+ * arrivals over the day (sum of base demand x multiplier per tick) equals the unmodulated total.
+ */
+export function drawRush(w: World): number[] {
+  const raw: number[] = []
+  for (let i = 0; i < RUSH_KNOTS; i++) raw.push(randRange(w.rng, RUSH.min, RUSH.max))
+  let base = 0
+  let modulated = 0
+  for (let t = 0; t < OPEN_TICKS; t++) {
+    const hour = OPEN_HOUR + t / TICKS_PER_HOUR
+    const d = demandAt(hour)
+    base += d
+    modulated += d * rushAt(raw, hour)
+  }
+  const k = modulated > 0 ? base / modulated : 1
+  return raw.map((m) => m * k)
+}
+
 export const reputationFactor = (rep: number) => 0.4 + 1.2 * (rep / 100)
 
 /** Average attractiveness of available items' prices (1 = fair pricing). */
@@ -44,8 +86,13 @@ export function priceFactor(w: World): number {
 
 /** Expected groups per tick right now. */
 export function arrivalRate(w: World): number {
-  const hour = 10 + w.clock.tick / TICKS_PER_HOUR
-  return (demandAt(hour) / TICKS_PER_HOUR) * reputationFactor(w.reputation.value) * priceFactor(w)
+  const hour = OPEN_HOUR + w.clock.tick / TICKS_PER_HOUR
+  return (
+    (demandAt(hour) / TICKS_PER_HOUR) *
+    rushAt(w.rush, hour) *
+    reputationFactor(w.reputation.value) *
+    priceFactor(w)
+  )
 }
 
 export function arrivalSystem(sim: Sim) {
@@ -56,16 +103,28 @@ export function arrivalSystem(sim: Sim) {
   spawnGroup(sim)
 }
 
-export function spawnGroup(sim: Sim): Group {
+/** Where a street route starts and ends for a side: just beyond the lot's side edges. */
+const streetEnd = (side: -1 | 1): Vec => ({
+  x: side < 0 ? -STREET.spawnDistance : MAXW + STREET.spawnDistance,
+  y: STREET.laneY,
+})
+
+/**
+ * Create a customer group at a street end; it walks to the door and enters from there. With
+ * `atDoor` (scenario tests, stress scenes) it skips the walk and enters immediately.
+ */
+export function spawnGroup(sim: Sim, opts: { atDoor?: boolean } = {}): Group {
   const w = sim.world
   const size = weightedIndex(w.rng, CUSTOMERS.groupSizeWeights) + 1
   const p = CUSTOMERS.patience
+  const side: -1 | 1 = chance(w.rng, 0.5) ? 1 : -1
   const g: Group = {
-    ...newAgent(entranceTile()),
+    ...newAgent(streetEnd(side)),
     id: sim.newId(),
     size,
     takeout: chance(w.rng, CUSTOMERS.takeoutChance),
-    state: 'toQueue',
+    side,
+    state: 'arriving',
     timer: 0,
     patience: {
       queue: ticks(randRange(w.rng, p.queue[0], p.queue[1])),
@@ -89,19 +148,34 @@ export function spawnGroup(sim: Sim): Group {
   if (!g.takeout && !Object.values(w.objects).some((o) => (CATALOGUE[o.def].seats ?? 0) >= size))
     g.takeout = true
   w.groups[g.id] = g
+  setRoute(g, [{ x: LOT.entranceX, y: STREET.laneY }, entranceTile()])
+  if (opts.atDoor) {
+    g.pos = { ...entranceTile() }
+    g.prev = { ...g.pos }
+    enterRestaurant(sim, g)
+  }
+  return g
+}
+
+/** The group steps through the door: only now does it queue and start its patience timers. */
+function enterRestaurant(sim: Sim, g: Group) {
+  const w = sim.world
+  g.state = 'toQueue'
+  g.timer = 0
+  g.path = []
+  g.pathIdx = 0
   sim.emit({ type: 'customerEnter', groupId: g.id })
   if (!MENU_ITEM_IDS.some((id) => isAvailable(w, id))) {
     leaveAngry(sim, g, 'nothingToOrder')
-    return g
+    return
   }
   const reg = chooseRegister(sim)
   if (!reg) {
     leaveAngry(sim, g, 'lineTooLong')
-    return g
+    return
   }
   reg.queue.push(g.id)
   g.registerId = reg.id
-  return g
 }
 
 // ---------- queue ----------
@@ -335,7 +409,8 @@ export function satisfaction(w: World, g: Group): number {
   return Math.round(score * 100)
 }
 
-function despawn(sim: Sim, g: Group) {
+/** The visit ends as the group steps out of the door: record it and drop its order. */
+function finishVisit(sim: Sim, g: Group) {
   const w = sim.world
   const score = satisfaction(w, g)
   g.satisfaction = score
@@ -343,7 +418,14 @@ function despawn(sim: Sim, g: Group) {
   if (g.angry) w.economy.today.lost++
   else w.economy.today.served++
   if (g.orderId !== null) delete w.orders[g.orderId]
-  delete w.groups[g.id]
+  g.orderId = null
+}
+
+/** After the door, walk the street back to the end the group came from, then disappear. */
+function startDeparture(g: Group) {
+  g.state = 'departing'
+  g.timer = 0
+  setRoute(g, [{ x: LOT.entranceX, y: STREET.laneY }, streetEnd(g.side)])
 }
 
 // ---------- per-tick behaviour ----------
@@ -505,9 +587,22 @@ export function customerSystem(sim: Sim) {
         }
         break
       }
+      case 'arriving': {
+        if (walkRoute(g, SPEED) === 'arrived') enterRestaurant(sim, g)
+        break
+      }
       case 'leaving': {
         const r = move(sim, g, SPEED, true)
-        if (r !== 'moving') despawn(sim, g)
+        if (r === 'moving') break
+        finishVisit(sim, g)
+        const door = entranceTile()
+        // Only groups that actually reached the door walk out along the street.
+        if (r === 'arrived' && g.pos.x === door.x && g.pos.y === door.y) startDeparture(g)
+        else delete w.groups[g.id]
+        break
+      }
+      case 'departing': {
+        if (walkRoute(g, SPEED) === 'arrived') delete w.groups[g.id]
         break
       }
     }

@@ -31,6 +31,17 @@ type AnyRecord = Record<string, unknown>
  */
 export const MIGRATIONS: Record<number, (w: AnyRecord) => AnyRecord> = {
   0: (w) => ({ ...w, winSeen: w.winSeen ?? false, dismissedHints: w.dismissedHints ?? [] }),
+  // v2: the open/prep flow and street legs. Old groups are already inside the lot.
+  1: (w) => ({
+    ...w,
+    rush: Array.isArray(w.rush) ? w.rush : new Array<number>(13).fill(1),
+    groups: Object.fromEntries(
+      Object.entries((w.groups ?? {}) as Record<string, AnyRecord>).map(([id, g]) => [
+        id,
+        { ...g, side: g.side ?? 1 },
+      ]),
+    ),
+  }),
 }
 
 export function migrate(world: AnyRecord, from: number, to = SAVE_VERSION): AnyRecord {
@@ -68,6 +79,7 @@ function assertWorld(w: unknown): asserts w is World {
     ['trash', isObj],
     ['candidates', Array.isArray],
     ['dismissedHints', Array.isArray],
+    ['rush', (x) => Array.isArray(x) && x.length === 13 && x.every(isNum)],
   ]
   for (const [k, ok] of need) if (!ok(w[k])) throw new SaveError(`Save is corrupt (${k})`)
 }

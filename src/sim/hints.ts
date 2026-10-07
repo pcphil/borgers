@@ -19,6 +19,13 @@ export function computeHints(w: World): Hint[] {
   const staff = Object.values(w.staff).filter((s) => s.state !== 'leaving')
   const hasRole = (r: string) => staff.some((s) => s.role === r || s.pendingRole === r)
 
+  if (w.clock.phase === 'prep')
+    out.push({
+      id: 'closed',
+      text: 'The restaurant is closed. Press Open restaurant when you are ready.',
+      severity: 'info',
+    })
+
   if (!objs.some((o) => o.def === 'register'))
     out.push({
       id: 'no-register',

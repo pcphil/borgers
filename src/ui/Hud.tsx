@@ -25,7 +25,9 @@ export function Hud() {
   const panel = useUI((s) => s.panel)
   const setPanel = useUI((s) => s.setPanel)
   if (!snap) return null
-  const phaseText = snap.phase === 'open' ? 'Open' : snap.phase === 'closing' ? 'Closing' : 'Night'
+  const phaseText = { prep: 'Preparing', open: 'Open', closing: 'Closing', night: 'Night' }[
+    snap.phase
+  ]
   return (
     <div className="pointer-events-auto flex flex-wrap items-center gap-2 rounded-xl bg-amber-50/95 px-3 py-2 shadow-lg">
       <div className="flex items-baseline gap-2 pr-2">
@@ -46,6 +48,16 @@ export function Hud() {
           {phaseText}
         </span>
       </div>
+      {snap.phase === 'prep' ? (
+        <button
+          type="button"
+          data-testid="open-button"
+          onClick={() => host.dispatch({ type: 'open' })}
+          className="rounded-md bg-green-600 px-3 py-1 text-sm font-bold text-white shadow hover:bg-green-700"
+        >
+          Open restaurant
+        </button>
+      ) : null}
       <div className="text-amber-950" title="Reputation (0–100)">
         😊 {Math.round(snap.reputation)}
       </div>

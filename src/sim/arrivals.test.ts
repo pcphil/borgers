@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { CUSTOMERS } from '../data/balance'
 import { spawnGroup } from './customers'
 import type { Sim } from './sim'
+import { openIfPrep } from './testkit'
 import { newGame } from './world'
 
 /** Arrival ticks and group sizes for `days` open days with no player actions. */
@@ -10,6 +11,7 @@ function recordArrivals(sim: Sim, days: number) {
   const sizes: number[] = []
   const endDay = sim.world.clock.day + days
   while (sim.world.clock.day < endDay) {
+    openIfPrep(sim)
     sim.step()
     for (const e of sim.drainEvents()) {
       if (e.type !== 'customerEnter') continue

@@ -1,6 +1,6 @@
 // Helpers for building small deterministic scenarios in tests.
 import { expect } from 'vitest'
-import { CUSTOMERS } from '../data/balance'
+import { CUSTOMERS, STREET } from '../data/balance'
 import type { ObjectDefId } from '../data/catalogue'
 import { INGREDIENTS, type Ingredient } from '../data/recipes'
 import type { Role } from '../data/unlocks'
@@ -80,6 +80,11 @@ export const BASIC_OBJECTS: Scenario['objects'] = [
 
 export const BASIC_STOCK = { bun: 40, patty: 40, lettuce: 40, tomato: 40, syrup: 40, cheese: 40 }
 
+/** Open the restaurant if the day is still in preparation (hand-stepped multi-day tests). */
+export function openIfPrep(sim: Sim) {
+  if (sim.world.clock.phase === 'prep') sim.dispatch({ type: 'open' })
+}
+
 /** Cross-link and sanity checks shared by the invariant, soak and fuzz tests. */
 export function checkInvariants(sim: Sim) {
   const w = sim.world
@@ -92,6 +97,13 @@ export function checkInvariants(sim: Sim) {
   }
   for (const a of [...Object.values(w.groups), ...Object.values(w.staff)]) {
     expect(Number.isFinite(a.pos.x) && Number.isFinite(a.pos.y)).toBe(true)
+    if ('state' in a && (a.state === 'arriving' || a.state === 'departing')) {
+      // On the street: on the lane or the door column between the lane and the entrance.
+      expect(a.pos.y).toBeGreaterThanOrEqual(STREET.laneY)
+      expect(a.pos.y).toBeLessThanOrEqual(0)
+      expect(Math.abs(a.pos.x - w.layout.w / 2)).toBeLessThanOrEqual(STREET.spawnDistance + MAXW)
+      continue
+    }
     expect(a.pos.x).toBeGreaterThanOrEqual(0)
     expect(a.pos.y).toBeGreaterThanOrEqual(0)
     expect(a.pos.x).toBeLessThan(w.layout.w)

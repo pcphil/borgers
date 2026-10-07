@@ -23,6 +23,9 @@ single player, no account or server: saves live in your browser.
   allowed; there is no game over.
 - Reputation and cumulative revenue earn stars, which unlock new items, roles and equipment.
   The goal is five stars.
+- Every day starts in **Preparing**: the clock is frozen at 10:00 and nobody arrives, so you can
+  build, hire, set prices and stock. Press **Open restaurant** to start the day. Customers walk in
+  from the street and leave the same way.
 - The day runs 10:00-22:00 in about four real minutes at 1x. Settlement happens at night and the
   game autosaves.
 
