@@ -7,6 +7,9 @@ import { cameraOffset, groundAxes, MAX_ZOOM, MIN_ZOOM } from './coords'
 const PAN_SPEED = 10 // tiles per second
 const keys = new Set<string>()
 
+/** Event the HUD rotate buttons fire; detail is -1 (like Q) or +1 (like E). */
+export const ROTATE_EVENT = 'borgers:rotate'
+
 /** Isometric orthographic camera: WASD/arrows/drag to pan, wheel to zoom, Q/E to rotate. */
 export function CameraRig() {
   const camera = useThree((s) => s.camera) as OrthographicCamera
@@ -29,6 +32,10 @@ export function CameraRig() {
         if (k === 'e') rotation.current += 1
       } else keys.delete(k)
     }
+    const onRotate = (e: Event) => {
+      rotation.current += (e as CustomEvent<number>).detail < 0 ? -1 : 1
+    }
+    window.addEventListener(ROTATE_EVENT, onRotate)
     const onWheel = (e: WheelEvent) => {
       e.preventDefault()
       zoom.current = Math.min(
@@ -65,6 +72,7 @@ export function CameraRig() {
     window.addEventListener('pointerup', onUp)
     el.addEventListener('contextmenu', (e) => e.preventDefault())
     return () => {
+      window.removeEventListener(ROTATE_EVENT, onRotate)
       window.removeEventListener('keydown', onKey)
       window.removeEventListener('keyup', onKey)
       window.removeEventListener('blur', blur)
