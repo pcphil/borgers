@@ -24,7 +24,7 @@
 
 - [x] 4.1 `pnpm lint`, `pnpm check:sim`, `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`, `pnpm build` all pass
 - [x] 4.2 `pnpm simulate 30 1 competent` (and seeds 2, 3) compared with the Balance Results: unchanged unless 2.3 changed the sim, in which case update the results in design.md (seeds 1-3 identical to the archived Balance Results: 1 and 2 reach 5★, 3 is 4★ at d30, seed 2 day-30 cash $2,125; the only sim change is ignoring non-finite command inputs)
-- [ ] 4.3 Open PR, CI green, merged; archive the change
+- [x] 4.3 Open PR, CI green, merged; archive the change
 
 ## Findings
 
