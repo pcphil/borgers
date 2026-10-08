@@ -46,7 +46,10 @@ export const INVENTORY = {
 }
 
 export const STAFF = {
+  /** Nightly candidate pool size. */
   candidates: 3,
+  /** Pool at the start of a new game, big enough to hire a full day-1 team. */
+  firstCandidates: 5,
   baseWage: 2_500,
   wagePerStat: 5_000,
   walkSpeed: 2.6,

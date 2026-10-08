@@ -19,10 +19,10 @@ import {
   type Vec,
 } from './types'
 
-export function generateCandidates(sim: Sim) {
+export function generateCandidates(sim: Sim, count = STAFF.candidates) {
   const w = sim.world
   w.candidates = []
-  for (let i = 0; i < STAFF.candidates; i++) {
+  for (let i = 0; i < count; i++) {
     const stats = {
       cooking: round2(randRange(w.rng, 0.1, 1)),
       speed: round2(randRange(w.rng, 0.1, 1)),

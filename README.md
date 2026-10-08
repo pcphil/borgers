@@ -12,7 +12,7 @@ single player, no account or server: saves live in your browser.
 
 - You manage the restaurant; staff do the cooking. Customers queue at a **register**, order, wait
   at the **pickup counter**, then eat at a table or take it away.
-- **Staff** (H): hire from the candidate pool and give each person a role: cashier, cook,
+- **Staff** (H): hire from the candidate pool (five on day 1, three new faces each night) and give each person a role: cashier, cook,
   assembler or cleaner. New hires walk in from the street and start work when they reach the
   door. Wages are charged every night.
 - **Build** (B): place and move stations and furniture, paint kitchen and dining zones, upgrade

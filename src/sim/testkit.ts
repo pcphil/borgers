@@ -117,7 +117,8 @@ export function checkInvariants(sim: Sim) {
   for (const t of Object.values(w.tasks)) {
     if (t.claimedBy !== null) expect(w.staff[t.claimedBy]?.taskId).toBe(t.id)
     // A task for a vanished order may only be one already being worked on.
-    if (t.orderId !== null && !w.orders[t.orderId]) expect(t.claimedBy).not.toBeNull()
+    if (t.orderId !== null && !w.orders[t.orderId])
+      expect(t.claimedBy, `orphan task ${JSON.stringify(t)} at tick ${w.clock.tick}`).not.toBeNull()
   }
   for (const s of Object.values(w.staff))
     if (s.taskId !== null) expect(w.tasks[s.taskId]?.claimedBy).toBe(s.id)

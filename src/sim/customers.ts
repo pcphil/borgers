@@ -522,6 +522,12 @@ export function customerSystem(sim: Sim) {
         g.prev = { ...g.pos }
         if (g.timer < ticks(STAFF.collectSeconds)) break
         const order = g.orderId !== null ? w.orders[g.orderId] : undefined
+        if (order && order.state !== 'ready') {
+          // The pickup counter was sold or moved while we reached for the food: the order is
+          // being re-delivered, so go back to waiting instead of leaving a stray delivery task.
+          g.state = 'waitingFood'
+          break
+        }
         if (order) {
           order.state = 'collected'
           if (order.pickupId !== null) {

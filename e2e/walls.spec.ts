@@ -17,9 +17,9 @@ async function tileToScreen(page: Page, x: number, y: number) {
   )
 }
 
-// Bins on the front, back, left and right edge of the starter lot (12x10), clear of the entrance.
+// Bins on the front, back, left and right edge of the starter lot (12x10), clear of the entrance and of table access tiles.
 const SPOTS = [
-  { x: 6, y: 0, wall: 'front' },
+  { x: 4, y: 0, wall: 'front' },
   { x: 6, y: 9, wall: 'back' },
   { x: 0, y: 1, wall: 'left' },
   { x: 11, y: 0, wall: 'right' },

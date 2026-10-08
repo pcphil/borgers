@@ -193,6 +193,24 @@ describe('order pipeline (6.4, 6.6)', () => {
     expect(find(sim, 'pickup').readyOrders).not.toContain(order?.id)
     expect(g.angry).toBe(false)
   })
+  it('selling the pickup counter while a group is collecting sends it back to waiting, with no stray delivery task', () => {
+    const sim = makeSim({ objects: BASIC_OBJECTS, stock: BASIC_STOCK })
+    addStaff(sim, 'cashier', { service: 1 })
+    addStaff(sim, 'cook', { speed: 1 })
+    addStaff(sim, 'assembler', { speed: 1 })
+    const g = spawnGroup(sim, { atDoor: true })
+    g.patience = { queue: 100_000, food: 100_000, seat: 100_000 }
+    stepUntil(sim, () => g.state === 'collecting')
+    const order = sim.world.orders[g.orderId as number]
+    expect(order?.state).toBe('ready')
+    expect(sim.dispatch({ type: 'sell', id: find(sim, 'pickup').id }).ok).toBe(true)
+    expect(order?.state).toBe('delivering')
+    stepUntil(sim, () => g.state !== 'collecting')
+    expect(g.state).toBe('waitingFood')
+    expect(order?.state).toBe('delivering')
+    // The group never collected, so the re-delivery task is still wanted and not orphaned.
+    expect(Object.values(sim.world.tasks).filter((t) => t.kind === 'deliver')).toHaveLength(1)
+  })
 })
 
 describe('stations (6.5, 6.7)', () => {
