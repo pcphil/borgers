@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { handleAutosave } from '../app/autosave'
 import { hashWorld } from '../sim/hash'
 import { runTicks } from '../sim/runner'
+import { checkInvariants } from '../sim/testkit'
 import { newGame, SAVE_VERSION } from '../sim/world'
 import { deserialize, exportJson, importJson, migrate, SaveError, serialize, toSim } from './format'
 import { AUTO_SLOT, idbKV, memoryKV, openKV, SaveSlots } from './slots'
@@ -101,6 +102,54 @@ describe('versioning (10.2)', () => {
     const loaded = toSim(deserialize(JSON.parse(exportJson(serialize(sim)))))
     runTicks(sim, 400)
     runTicks(loaded, 400)
+    expect(hashWorld(loaded.world)).toBe(hashWorld(sim.world))
+  })
+  it('migrates v3 saves: a seated group keeps its table, on the first chairs', () => {
+    const sim = busyGame()
+    const eating = () => Object.values(sim.world.groups).find((g) => g.state === 'eating')
+    for (let i = 0; i < 6000 && !eating(); i++) runTicks(sim, 1)
+    const g = eating()
+    expect(g, 'a group is eating').toBeDefined()
+    const v3 = JSON.parse(JSON.stringify(sim.world))
+    v3.version = 3
+    // v3 had one occupant per table: keep the first, and send any other sharer back to look for a seat.
+    const kept = new Set<number>()
+    for (const o of Object.values(v3.objects) as Record<string, unknown>[]) {
+      const occ = (o.seatOccupants as (number | null)[]).find((id) => id !== null)
+      o.occupiedBy = occ ?? null
+      if (occ !== undefined && occ !== null) kept.add(occ)
+      o.seatOccupants = undefined
+      o.used = undefined
+    }
+    for (const grp of Object.values(v3.groups) as Record<string, unknown>[]) {
+      grp.seatIdx = undefined
+      if (grp.tableId !== null && !kept.has(grp.id as number)) {
+        grp.tableId = null
+        grp.state = 'seeking'
+      }
+    }
+    const save = deserialize({ format: 'borgers-save', version: 3, savedAt: '', world: v3 })
+    expect(save.version).toBe(SAVE_VERSION)
+    const loaded = toSim(save)
+    const lg = loaded.world.groups[g?.id as number]
+    expect(lg?.tableId).toBe(g?.tableId)
+    expect(lg?.seatIdx).toEqual([...Array(lg?.size).keys()])
+    const table = loaded.world.objects[lg?.tableId as number]
+    for (const chair of lg?.seatIdx ?? []) expect(table?.seatOccupants[chair]).toBe(lg?.id)
+    for (const o of Object.values(loaded.world.objects)) expect('occupiedBy' in o).toBe(false)
+    checkInvariants(loaded)
+    runTicks(loaded, 1500)
+    checkInvariants(loaded)
+  })
+  it('a save taken while diners sit at tables round-trips exactly', () => {
+    const sim = busyGame()
+    const seated = () =>
+      Object.values(sim.world.objects).some((o) => o.seatOccupants.some((id) => id !== null))
+    for (let i = 0; i < 6000 && !seated(); i++) runTicks(sim, 1)
+    expect(seated()).toBe(true)
+    const loaded = toSim(deserialize(JSON.parse(exportJson(serialize(sim)))))
+    runTicks(sim, 1500)
+    runTicks(loaded, 1500)
     expect(hashWorld(loaded.world)).toBe(hashWorld(sim.world))
   })
   it('refuses saves from a newer version', () => {

@@ -205,16 +205,18 @@ describe('customer exits (8.2, 8.4)', () => {
     const t = sim.world.objects[g.tableId as number]
     expect(t?.def).toBe('table4')
   })
-  it('no seat before patience -> leaves with noSeats', () => {
-    const sim = makeSim({ objects: BASIC_OBJECTS })
+  it('no seat before patience -> falls back to takeout, no complaint', () => {
+    const sim = makeSim({ objects: BASIC_OBJECTS, stock: BASIC_STOCK })
     for (const o of Object.values(sim.world.objects))
-      if (o.def.startsWith('table')) o.occupiedBy = 999
+      if (o.def.startsWith('table')) o.seatOccupants.fill(999)
     const g = spawnGroup(sim, { atDoor: true })
     g.takeout = false
     g.state = 'seeking'
     g.timer = 0
     stepUntil(sim, () => g.state === 'leaving')
-    expect(g.complaint).toBe('noSeats')
+    expect(g.takeout).toBe(true)
+    expect(g.angry).toBe(false)
+    expect(g.complaint).toBeNull()
   })
   it('payment happens at order time', () => {
     const sim = kitchenless()

@@ -1,3 +1,4 @@
+import { CATALOGUE, type ObjectDefId } from '../data/catalogue'
 import { Sim } from '../sim/sim'
 import type { World } from '../sim/types'
 import { SAVE_VERSION } from '../sim/world'
@@ -52,6 +53,35 @@ export const MIGRATIONS: Record<number, (w: AnyRecord) => AnyRecord> = {
       ]),
     ),
   }),
+  // v4: tables hold one slot per chair. A v3 table's single occupant takes the first chairs.
+  3: (w) => {
+    const groups = (w.groups ?? {}) as Record<string, AnyRecord>
+    const objects = Object.fromEntries(
+      Object.entries((w.objects ?? {}) as Record<string, AnyRecord>).map(([id, o]) => {
+        const { occupiedBy, ...rest } = o
+        const seats = CATALOGUE[o.def as ObjectDefId]?.seats ?? 0
+        const seatOccupants: (number | null)[] = new Array<number | null>(seats).fill(null)
+        const g = typeof occupiedBy === 'number' ? groups[String(occupiedBy)] : undefined
+        if (g && typeof occupiedBy === 'number') {
+          const size = Math.min(seats, typeof g.size === 'number' ? g.size : 1)
+          for (let i = 0; i < size; i++) seatOccupants[i] = occupiedBy
+        }
+        return [id, { ...rest, seatOccupants, used: false }]
+      }),
+    )
+    const held = new Map<string, number[]>()
+    for (const o of Object.values(objects) as AnyRecord[])
+      (o.seatOccupants as (number | null)[]).forEach((gid, chair) => {
+        if (gid !== null) held.set(String(gid), [...(held.get(String(gid)) ?? []), chair])
+      })
+    return {
+      ...w,
+      objects,
+      groups: Object.fromEntries(
+        Object.entries(groups).map(([id, g]) => [id, { ...g, seatIdx: held.get(id) ?? [] }]),
+      ),
+    }
+  },
 }
 
 export function migrate(world: AnyRecord, from: number, to = SAVE_VERSION): AnyRecord {

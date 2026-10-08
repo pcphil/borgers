@@ -34,7 +34,10 @@ export type PlacedObject = {
   slots: (Id | null)[]
   /** Tables. */
   dirty: boolean
-  occupiedBy: Id | null
+  /** Tables: the group holding each chair (one slot per seat), or null. */
+  seatOccupants: (Id | null)[]
+  /** Tables: someone ate here since the last cleaning; the table turns dirty when it empties. */
+  used: boolean
   /** Registers: assigned cashier. */
   cashierId: Id | null
   /** Pickup counters: orders waiting to be collected. */
@@ -82,6 +85,8 @@ export type Group = Agent & {
   registerId: Id | null
   orderId: Id | null
   tableId: Id | null
+  /** Chairs held at the table, one per member in member order. */
+  seatIdx: number[]
   eatTicks: number
   queueWait: number
   foodWait: number

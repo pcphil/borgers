@@ -116,7 +116,14 @@ export function Inspect() {
       {def.seats ? (
         <>
           <Row k="Seats" v={def.seats} />
-          <Row k="State" v={o.dirty ? 'Dirty' : o.occupiedBy !== null ? 'In use' : 'Free'} />
+          <Row
+            k="State"
+            v={
+              o.dirty
+                ? 'Dirty'
+                : `${o.seatOccupants.filter((id) => id !== null).length} of ${def.seats} in use`
+            }
+          />
         </>
       ) : null}
       {def.storage ? <Row k="Storage" v={`+${def.storage}`} /> : null}

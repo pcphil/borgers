@@ -6,11 +6,18 @@ import { CATALOGUE } from '../data/catalogue'
 import { COMPLAINT_ICON } from '../ui/text'
 import { agentPosition } from './Agents'
 import { objectTransform } from './coords'
+import { hasBag } from './labelRules'
 
 const POOL = 16
 const v = new Vector3()
 
-type Label = { x: number; y: number; z: number; text: string; kind: 'bubble' | 'ready' | 'dirty' }
+type Label = {
+  x: number
+  y: number
+  z: number
+  text: string
+  kind: 'bubble' | 'ready' | 'dirty' | 'bag'
+}
 
 /** Collect the few world labels worth showing this frame (sparse by design). */
 function collect(alpha: number): Label[] {
@@ -38,6 +45,13 @@ function collect(alpha: number): Label[] {
     agentPosition(g, alpha, v)
     out.push({ x: v.x, y: 1.5, z: v.z, text: COMPLAINT_ICON[g.complaint], kind: 'bubble' })
   }
+  // Lowest priority: the bag only takes pool slots that bubbles and markers left over.
+  for (const g of Object.values(w.groups)) {
+    if (out.length >= POOL) break
+    if (!hasBag(g)) continue
+    agentPosition(g, alpha, v)
+    out.push({ x: v.x, y: g.complaint ? 1.1 : 1.5, z: v.z, text: '🛍️', kind: 'bag' })
+  }
   return out.slice(0, POOL)
 }
 
@@ -47,6 +61,7 @@ const STYLE: Record<Label['kind'], string> = {
   ready:
     'background:#2e7d32;color:white;border-radius:6px;padding:1px 6px;font-size:12px;font-weight:600;white-space:nowrap',
   dirty: 'font-size:16px',
+  bag: 'font-size:15px',
 }
 
 /**
