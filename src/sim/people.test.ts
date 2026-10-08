@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ECONOMY, OPEN_TICKS, REPUTATION, STARS, TICKS_PER_HOUR } from '../data/balance'
+import { ECONOMY, OPEN_TICKS, REPUTATION, STARS, STREET, TICKS_PER_HOUR } from '../data/balance'
 import { arrivalRate, satisfaction, spawnGroup } from './customers'
 import { computeHints } from './hints'
 import { createOrder, newTask } from './kitchen'
@@ -36,13 +36,15 @@ describe('candidates (7.1)', () => {
 })
 
 describe('hire / fire / wages (7.2)', () => {
-  it('hiring removes candidate and spawns staff at entrance', () => {
+  it('hiring removes candidate and the new staff member arrives from the street', () => {
     const sim = makeSim({ objects: BASIC_OBJECTS })
     const c = sim.world.candidates[0]!
     const r = sim.dispatch({ type: 'hire', candidateId: c.id })
     expect(r.ok).toBe(true)
     expect(sim.world.candidates.find((x) => x.id === c.id)).toBeUndefined()
-    expect(sim.world.staff[c.id]?.pos).toEqual({ x: 2, y: 0 })
+    const s = sim.world.staff[c.id]
+    expect(s?.state).toBe('arriving')
+    expect(s?.pos.y).toBe(STREET.laneY)
   })
   it('firing mid-grill returns the step to the queue (ingredients kept) and the cook walks out', () => {
     const sim = makeSim({ objects: BASIC_OBJECTS, stock: BASIC_STOCK })

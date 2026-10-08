@@ -1,6 +1,6 @@
 import type { SimEvent } from '../sim/types'
 
-/** Trigger an autosave for a night-settlement `autosave` event when enabled. */
+/** Trigger an autosave for an `autosave` event (opening the restaurant or night settlement) when enabled. */
 export async function handleAutosave(
   events: SimEvent[],
   enabled: boolean,

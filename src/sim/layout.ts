@@ -1,4 +1,4 @@
-import { LOT } from '../data/balance'
+import { LOT, STREET } from '../data/balance'
 import { CATALOGUE, type ObjectDefId } from '../data/catalogue'
 import { isUnlocked } from '../data/unlocks'
 import { accessTiles, footprintTiles, type Placement } from './geometry'
@@ -10,6 +10,12 @@ export const MAXH = LOT.expanded.h
 export const idx = (x: number, y: number) => y * MAXW + x
 
 export const entranceTile = (): Vec => ({ x: LOT.entranceX, y: 0 })
+
+/** Where a street route starts and ends for a side: just beyond the lot's side edges. */
+export const streetEnd = (side: -1 | 1): Vec => ({
+  x: side < 0 ? -STREET.spawnDistance : MAXW + STREET.spawnDistance,
+  y: STREET.laneY,
+})
 
 export const inBounds = (w: World, x: number, y: number) =>
   x >= 0 && y >= 0 && x < w.layout.w && y < w.layout.h

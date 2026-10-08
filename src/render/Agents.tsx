@@ -15,6 +15,8 @@ const MAX_CUSTOMERS = CUSTOMERS.maxActiveGroups * 4
 const MAX_STAFF = 40
 const MAX_TRASH = 64
 const CHAR_HEIGHT = 0.95
+/** Height of the chair seat: the sit pose has its origin at the hips. */
+const SEAT_Y = 0.52
 
 const SHIRTS = [
   '#3e7cb1',
@@ -160,6 +162,7 @@ function figures(w: World, alpha: number, staff: boolean): Figure[] {
         fig.x = v.x
         fig.z = v.z
         fig.seated = true
+        fig.y = SEAT_Y
         fig.faceYaw = Math.atan2(t.position.x - v.x, t.position.z - v.z)
       } else {
         const f = FORMATION[m] ?? [0, 0]
@@ -187,10 +190,15 @@ function CharacterAgents() {
   const gltfs = useGLTF(CHARACTER_URLS)
   const baked = useMemo(
     () =>
-      gltfs.map((g) => ({
-        stand: bakeCharacter(g.scene, g.animations, 'idle', CHAR_HEIGHT),
-        sit: bakeCharacter(g.scene, g.animations, 'sit', CHAR_HEIGHT),
-      })),
+      gltfs.map((g) => {
+        const stand = bakeCharacter(g.scene, g.animations, 'idle', CHAR_HEIGHT)
+        // The sit clip is one static pose with its origin at the hips: same scale as standing.
+        const sit = bakeCharacter(g.scene, g.animations, 'sit', CHAR_HEIGHT, {
+          scale: stand?.scale,
+          keepOrigin: true,
+        })
+        return { stand, sit }
+      }),
     [gltfs],
   )
   const stand = useRef<(InstancedMesh | null)[]>([])

@@ -22,7 +22,17 @@ import {
 import { setMenu } from './menu'
 import { evaluateStars } from './progression'
 import { fire, generateCandidates, hire, setRole, staffSystem } from './staff'
-import type { Id, MenuEntry, PlacedObject, Rot, SimEvent, Vec, World, Zone } from './types'
+import {
+  type Id,
+  isLeaving,
+  type MenuEntry,
+  type PlacedObject,
+  type Rot,
+  type SimEvent,
+  type Vec,
+  type World,
+  type Zone,
+} from './types'
 
 export type Command =
   | { type: 'place'; def: ObjectDefId; x: number; y: number; rot: Rot }
@@ -182,8 +192,9 @@ export class Sim {
     const w = this.world
     if (w.clock.phase !== 'prep') return fail('notPreparing')
     w.clock.phase = 'open'
-    for (const s of Object.values(w.staff)) s.employedAtOpen = s.state !== 'leaving'
+    for (const s of Object.values(w.staff)) s.employedAtOpen = !isLeaving(s.state)
     w.rush = drawRush(w)
+    this.emit({ type: 'autosave' })
     return OK
   }
 

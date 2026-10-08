@@ -1,7 +1,7 @@
 import { CATALOGUE } from '../data/catalogue'
 import { INGREDIENT_LABEL, type Ingredient, MENU, MENU_ITEM_IDS } from '../data/recipes'
 import { isMenuUnlocked, itemNeeds, stationExists } from './menu'
-import type { World } from './types'
+import { isLeaving, type World } from './types'
 
 export type Hint = { id: string; text: string; severity: 'info' | 'warn' }
 
@@ -16,7 +16,7 @@ const STATION_NAME: Record<string, string> = {
 export function computeHints(w: World): Hint[] {
   const out: Hint[] = []
   const objs = Object.values(w.objects)
-  const staff = Object.values(w.staff).filter((s) => s.state !== 'leaving')
+  const staff = Object.values(w.staff).filter((s) => !isLeaving(s.state))
   const hasRole = (r: string) => staff.some((s) => s.role === r || s.pendingRole === r)
 
   if (w.clock.phase === 'prep')

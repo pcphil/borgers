@@ -87,17 +87,27 @@ export function Kenney({
   return <primitive object={obj} position={position} />
 }
 
-export type BakedCharacter = { geometry: BufferGeometry; material: Material }
+export type BakedCharacter = { geometry: BufferGeometry; material: Material; scale: number }
+
+export type BakeOptions = {
+  /** Use this scale instead of fitting the pose to `height` (so poses of one model match). */
+  scale?: number
+  /** Keep the clip's own vertical origin (e.g. hips at seat level) instead of standing on y = 0. */
+  keepOrigin?: boolean
+}
 
 /**
  * Bake a skinned character into static geometry posed at the first frame of `clipName`,
  * normalised to `height` with feet at y = 0. Static geometry can then be instanced.
+ * Seated poses pass the standing `scale` and `keepOrigin` so the figure keeps its size and the
+ * caller sets the seat height.
  */
 export function bakeCharacter(
   scene: Object3D,
   animations: { name: string }[],
   clipName: string,
   height: number,
+  opts: BakeOptions = {},
 ): BakedCharacter | null {
   // SkeletonUtils.clone rebinds skinned meshes to the cloned bones (Object3D.clone does not).
   const root = cloneSkinned(scene)
@@ -139,12 +149,12 @@ export function bakeCharacter(
   merged.computeBoundingBox()
   const bb = merged.boundingBox as Box3
   const size = bb.getSize(new Vector3())
-  const s = height / size.y
+  const s = opts.scale ?? height / size.y
   const c = bb.getCenter(new Vector3())
-  merged.translate(-c.x, -bb.min.y, -c.z)
+  merged.translate(-c.x, opts.keepOrigin ? 0 : -bb.min.y, -c.z)
   merged.scale(s, s, s)
   // Characters face +z in the source and Agents yaws them with atan2(dx, dz), so keep +z forward.
-  return { geometry: merged, material }
+  return { geometry: merged, material, scale: s }
 }
 
 for (const url of CHARACTER_URLS) useGLTF.preload(url)

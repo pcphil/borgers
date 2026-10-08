@@ -6,7 +6,7 @@ import { ECONOMY, LOT } from '../data/balance'
 import { CATALOGUE, OBJECT_IDS, type ObjectCategory } from '../data/catalogue'
 import { INGREDIENT_COST, INGREDIENT_LABEL, MENU } from '../data/recipes'
 import { isUnlocked, ROLES, requiredStars } from '../data/unlocks'
-import { ZONE_DINING, ZONE_KITCHEN, type Zone } from '../sim/types'
+import { isLeaving, ZONE_DINING, ZONE_KITCHEN, type Zone } from '../sim/types'
 import { Button, Panel, StatBar } from './common'
 import { ROLE_LABEL, UNAVAILABLE_TEXT } from './text'
 
@@ -106,7 +106,7 @@ export function StaffPanel() {
   const snap = useUI((s) => s.snapshot)
   const select = useUI((s) => s.select)
   if (!snap) return null
-  const active = snap.staff.filter((s) => s.state !== 'leaving')
+  const active = snap.staff.filter((s) => !isLeaving(s.state))
   return (
     <Panel title="Staff" onClose={close} className="w-80">
       <h3 className="mb-1 text-xs font-bold uppercase text-amber-900/60">

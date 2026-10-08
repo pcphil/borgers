@@ -60,6 +60,11 @@ export function addStaff(
   const s = sim.world.staff[id] as Staff
   s.pos = { ...at }
   s.prev = { ...at }
+  // Scenario staff are already inside: skip the street walk.
+  s.state = 'idle'
+  s.side = 1
+  s.path = []
+  s.pathIdx = 0
   sim.dispatch({ type: 'setRole', staffId: id, role })
   s.role = role
   s.pendingRole = null

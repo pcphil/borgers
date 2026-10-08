@@ -37,7 +37,7 @@
 
 - [x] 7.1 `pnpm lint`, `pnpm check:sim`, `pnpm typecheck`, `pnpm test`, `pnpm test:e2e`, `pnpm build` pass
 - [x] 7.2 `pnpm simulate 30 <seed> competent` for seeds 1-3 compared with the archived Balance Results (star day thresholds within a few days; no seed goes bankrupt); adjust `RUSH`/`STREET` or record the new results in design.md
-- [ ] 7.3 Update README (playing section: Open button) and CLAUDE.md if present; open PR, CI green, merged; archive the change
+- [x] 7.3 Update README (playing section: Open button) and CLAUDE.md if present; open PR, CI green, merged; archive the change
 
 ## Findings
 

@@ -16,7 +16,7 @@ import { earnSale } from './economy'
 import { accessTiles, frontDir, manhattan, tileOf } from './geometry'
 import { canReserve, release, reserve } from './inventory'
 import { cancelOrder, createOrder, newTask } from './kitchen'
-import { entranceTile, idx, isWalkable, MAXW } from './layout'
+import { entranceTile, idx, isWalkable, streetEnd } from './layout'
 import { attractiveness, isAvailable, itemNeeds, priceFairness } from './menu'
 import { clearTarget, move, newAgent, setRoute, setTarget, walkRoute } from './movement'
 import { distanceField } from './path'
@@ -102,12 +102,6 @@ export function arrivalSystem(sim: Sim) {
   if (rand(w.rng) >= arrivalRate(w)) return
   spawnGroup(sim)
 }
-
-/** Where a street route starts and ends for a side: just beyond the lot's side edges. */
-const streetEnd = (side: -1 | 1): Vec => ({
-  x: side < 0 ? -STREET.spawnDistance : MAXW + STREET.spawnDistance,
-  y: STREET.laneY,
-})
 
 /**
  * Create a customer group at a street end; it walks to the door and enters from there. With

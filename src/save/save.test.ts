@@ -83,6 +83,26 @@ describe('versioning (10.2)', () => {
     expect(save.world.rush).toHaveLength(13)
     expect(save.world.dismissedHints).toEqual([])
   })
+  it('migrates v2 saves: staff get a side and keep working', () => {
+    const sim = busyGame()
+    const v2 = JSON.parse(JSON.stringify(sim.world))
+    v2.version = 2
+    for (const st of Object.values(v2.staff) as Record<string, unknown>[]) st.side = undefined
+    const save = deserialize({ format: 'borgers-save', version: 2, savedAt: '', world: v2 })
+    expect(save.version).toBe(SAVE_VERSION)
+    for (const st of Object.values(save.world.staff)) expect(st.side).toBe(1)
+    runTicks(toSim(save), 500)
+  })
+  it('a save taken while staff are walking in round-trips exactly', () => {
+    const sim = newGame(4)
+    for (const c of [...sim.world.candidates]) sim.dispatch({ type: 'hire', candidateId: c.id })
+    runTicks(sim, 60)
+    expect(Object.values(sim.world.staff).every((st) => st.state === 'arriving')).toBe(true)
+    const loaded = toSim(deserialize(JSON.parse(exportJson(serialize(sim)))))
+    runTicks(sim, 400)
+    runTicks(loaded, 400)
+    expect(hashWorld(loaded.world)).toBe(hashWorld(sim.world))
+  })
   it('refuses saves from a newer version', () => {
     const s = { ...serialize(newGame(1)), version: SAVE_VERSION + 1 }
     expect(() => deserialize(s)).toThrow(/newer version/)
@@ -148,6 +168,13 @@ describe('autosave (10.5)', () => {
     expect(await handleAutosave([{ type: 'autosave' }], false, save)).toBe(false)
     expect(await handleAutosave([{ type: 'purchase', amount: 1 }], true, save)).toBe(false)
     expect(saves).toBe(1)
+  })
+  it('opening the restaurant emits exactly one autosave event', () => {
+    const sim = newGame(1)
+    sim.dispatch({ type: 'open' })
+    expect(sim.drainEvents().filter((e) => e.type === 'autosave')).toHaveLength(1)
+    sim.dispatch({ type: 'open' }) // rejected: no second event
+    expect(sim.drainEvents().filter((e) => e.type === 'autosave')).toHaveLength(0)
   })
   it('night settlement emits an autosave event', () => {
     const sim = newGame(1)
