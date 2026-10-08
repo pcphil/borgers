@@ -13,12 +13,15 @@ export const STARTER = {
     { def: 'assembly', x: 5, y: 8, rot: 0 },
     { def: 'soda', x: 8, y: 8, rot: 0 },
     { def: 'fridge', x: 10, y: 8, rot: 0 },
-    { def: 'table2', x: 8, y: 2, rot: 0 },
+    { def: 'fridge', x: 11, y: 8, rot: 0 },
+    { def: 'table4', x: 2, y: 2, rot: 0 },
+    { def: 'table4', x: 8, y: 1, rot: 0 },
     { def: 'table2', x: 10, y: 2, rot: 0 },
     { def: 'table2', x: 0, y: 3, rot: 0 },
     { def: 'bin', x: 11, y: 4, rot: 0 },
   ] satisfies StarterObject[] as StarterObject[],
-  stock: { bun: 60, patty: 60, lettuce: 50, tomato: 50, syrup: 60 } as Partial<
+  /** Covers a full first day (measured peak use: bun 71, patty 80, lettuce/tomato 71, syrup 53); two fridges hold 450. */
+  stock: { bun: 80, patty: 90, lettuce: 80, tomato: 80, syrup: 60 } as Partial<
     Record<Ingredient, number>
   >,
 }
