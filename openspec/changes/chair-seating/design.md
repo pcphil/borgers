@@ -11,6 +11,7 @@ Saves are the whole `World` JSON, `SAVE_VERSION = 3`, with `MIGRATIONS` keyed by
 **Goals:**
 - Seat by chair: a table holds one slot per chair; a solo diner uses one chair; a group of 2+ owns the table while it eats.
 - Dirty/clean at table level, once per use, when the last diner leaves.
+- No seat means takeout, not an angry exit.
 - Takeout groups are visibly marked; shared tables render each guest on their own chair.
 - Deterministic, save/load exact, with a v3 to v4 migration.
 - Pacing stays in the `early-game-balance` band after re-tuning seats.
@@ -33,18 +34,22 @@ Saves are the whole `World` JSON, `SAVE_VERSION = 3`, with `MIGRATIONS` keyed by
 
 **D5. Chair identity is chosen in the sim, drawn by the renderer.** The renderer reads `g.seatIdx[m]` and `table.def` to pick `SEATS[def][chair]`; it no longer assumes chair = member index.
 
+**D9. Seat patience ends in takeout, not anger.**
+In the `seeking` state, when `g.timer > g.patience.seat`, set `g.takeout = true` and call `startLeaving` instead of `leaveAngry(..., 'noSeats')`. The group already holds its food, so nothing else changes: it is not `angry`, `finishVisit` counts it as served, and `satisfaction` gives the full seat component because `takeout` is now true. The group still waits out its seat patience first (15-25 s, not counted in `queueWait`/`foodWait`), so it can still get a seat if one frees up. A `dirty` complaint set while seeking stays (the cleanliness penalty is real); `noSeats` is no longer produced but remains in the `Complaint` union and `text.ts` so old saves and day records load. Alternatives: fall back immediately when no seat is free at collection time (loses diners who would have got a seat seconds later); keep a small penalty (rejected by the user). Consequences: `noSeats` losses become served groups, so reputation and revenue rise and seat count matters less, which feeds D8.
+
 **D6. Takeout marker is a Label kind.** Add kind `bag` (a bag emoji) to `Labels.tsx` for takeout groups in states from queue to leaving. Pool size 16 is shared with bubbles and ready/dirty markers, so cap bag labels (shown only when the pool has room, after higher-priority kinds), as bubbles already are. Alternative: a 3D mesh attached to agents (more instancing work, rotation handling); rejected for this change.
 
 **D7. Save v4 and migration.** `SAVE_VERSION = 4`. `MIGRATIONS[3]`: for every object with `occupiedBy` set, create `seatOccupants` with that group on chairs `0..size-1`, set the group's `seatIdx`, set `used = false`; every other table gets an all-null array; drop `occupiedBy`. Dirty tables keep `dirty` and their queued clean task. Objects that are not tables get `seatOccupants: []`.
 
-**D8. Re-tune after the rule change.** Chairs go further, so the starter (14 seats: 2 table4, 3 table2) may become more than needed. Keep the starter layout unless measurement shows pacing too fast (2★ or 3★ more than ~2 days earlier than the `early-game-balance` table) or day-1 `noSeats` is gone with room to spare; then trim tables, not economy numbers. The autopilot's table spots (`src/dev/autopilot.ts`) are left unless a trimmed starter collides with them.
+**D8. Re-tune after the rule change.** Chairs go further, so the starter (14 seats: 2 table4, 3 table2) may become more than needed. Keep the starter layout unless measurement shows pacing too fast (D9 makes this more likely) (2★ or 3★ more than ~2 days earlier than the `early-game-balance` table) or day-1 `noSeats` is gone with room to spare; then trim tables, not economy numbers. The autopilot's table spots (`src/dev/autopilot.ts`) are left unless a trimmed starter collides with them.
 
 ## Risks / Trade-offs
 
 - [Orphaned or doubly-owned chairs after sell/move/fire/angry-leave paths] → Route every release through one `releaseSeat(group)` helper; extend `checkInvariants` (occupant ids exist, `seatIdx` matches, groups 2+ never share, no occupied chair on a dirty table) and run the fuzz and SOAK suites, which found a similar race in `early-game-balance`.
 - [A group arriving at a table while another group's last diner is leaving and the table turns dirty] → Dirty is set in the same tick the last chair empties; `findTable` already skips dirty tables.
 - [A solo takes the one chair left at a table whose other occupant is about to leave, delaying cleaning] → Accepted; cleaning happens when the table empties.
-- [Pacing shifts] → D8 and the 30-day seeds 1-5 table in task 3.1.
+- [Pacing shifts, now faster because seat shortages no longer cost reputation or lost groups] → D8 and the 30-day seeds 1-5 table in task 4.1; if 2★/3★ come more than ~2 days early, trim starter tables first.
+- [Players never feel a reason to build tables] → Accepted: takeout sales still earn money, and tables only raise dine-in satisfaction; revisit in a later balance change if tables feel pointless.
 - [Label pool exhaustion hides bubbles] → D6 priority.
 - [Save v4 breaks exact replay for v3 saves mid-meal] → Migration seats groups on the first chairs; covered by a migration test and a round-trip test.
 
