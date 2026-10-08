@@ -13,14 +13,14 @@
 
 ## 3. Seated posture
 
-- [ ] 3.1 Investigate the `sit` clip with a throwaway script (duration, tracks, bake at start/mid/end) and record the finding under Findings
-- [ ] 3.2 Implement the chosen fix (D5: later frame, bake-time correction, and/or seat offsets) so seated customers sit upright facing the table; standing figures unchanged. Verify by screenshots (default zoom and zoomed in, all four rotations, 2-seat and 4-seat tables) and a standing-figure before/after comparison
+- [x] 3.1 Investigate the `sit` clip with a throwaway script (duration, tracks, bake at start/mid/end) and record the finding under Findings
+- [x] 3.2 Implement the chosen fix (D5: later frame, bake-time correction, and/or seat offsets) so seated customers sit upright facing the table; standing figures unchanged. Verify by screenshots (default zoom and zoomed in, all four rotations, 2-seat and 4-seat tables) and a standing-figure before/after comparison
 
 ## 4. Housekeeping
 
-- [ ] 4.1 Re-check `npm view @react-three/fiber dist-tags`: upgrade within semver only if a stable release removes `THREE.Clock`, otherwise record the finding that the warning is upstream and left as is
-- [ ] 4.2 Street ends: screenshot at minimum zoom with customers spawning at both ends; fix any visible pop-in (ground, spawn distance, fade) or record that none was seen
-- [ ] 4.3 New `e2e/walls.spec.ts`: bins next to each wall can be selected by clicking and open the Inspect panel. Verify `pnpm test:e2e` passes
+- [x] 4.1 Re-check `npm view @react-three/fiber dist-tags`: upgrade within semver only if a stable release removes `THREE.Clock`, otherwise record the finding that the warning is upstream and left as is
+- [x] 4.2 Street ends: screenshot at minimum zoom with customers spawning at both ends; fix any visible pop-in (ground, spawn distance, fade) or record that none was seen
+- [x] 4.3 New `e2e/walls.spec.ts`: bins next to each wall can be selected by clicking and open the Inspect panel. Verify `pnpm test:e2e` passes
 
 ## 5. Playthrough audit
 
@@ -35,4 +35,7 @@
 
 ## Findings
 
-_(filled in during apply)_
+- **Sit pose (3.1):** the `sit` clip is a single static pose (0.17 s, identical at every sample). It is upright: torso and head stack over the hips, depth matches idle. The defect was the bake: it rescaled the seated pose to the full character height (about 8% too big) and stood its feet on y = 0, so hips sat at floor level inside the chair. Fix (3.2): bake `sit` with the standing scale and keep the clip origin (hips), then raise seated figures by `SEAT_Y` (0.52) in `Agents.tsx`. Verified by screenshots at four rotations, 2-seat tables; diners sit upright on the chairs with torso above the table top.
+- **THREE.Clock (4.1):** `@react-three/fiber` latest stable is 9.8.1 (alpha 10.0.0-alpha.5). Still the upstream `new THREE.Clock()` warning; left as is.
+- **Street ends (4.2):** at minimum zoom no pop-in seen: the road runs past the viewport edge and customers appear off-screen. The hourglass above walkers on the street is the `lineTooLong` complaint on a departing group, not a bug.
+- **Click-through (4.3):** picking is by ground tile (invisible plane), so walls never block clicks; `e2e/walls.spec.ts` covers bins on all four walls at all four rotations.

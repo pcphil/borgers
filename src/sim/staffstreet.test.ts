@@ -16,7 +16,8 @@ function hireOne(sim: ReturnType<typeof makeSim>) {
   return s
 }
 
-const fire = (sim: ReturnType<typeof makeSim>, id: Id) => sim.dispatch({ type: 'fire', staffId: id })
+const fire = (sim: ReturnType<typeof makeSim>, id: Id) =>
+  sim.dispatch({ type: 'fire', staffId: id })
 
 describe('staff street entrance', () => {
   it('a hired cook starts outside, takes no task while walking, then goes idle at the door', () => {

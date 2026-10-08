@@ -9,7 +9,15 @@ import { clearTarget, move, newAgent, setRoute, setTarget, walkRoute } from './m
 import { distanceField } from './path'
 import { chance, pick, randRange } from './rng'
 import type { Sim } from './sim'
-import { type Candidate, type Id, isLeaving, type PlacedObject, type Staff, type Task, type Vec } from './types'
+import {
+  type Candidate,
+  type Id,
+  isLeaving,
+  type PlacedObject,
+  type Staff,
+  type Task,
+  type Vec,
+} from './types'
 
 export function generateCandidates(sim: Sim) {
   const w = sim.world
@@ -90,7 +98,10 @@ export function fire(sim: Sim, staffId: Id): boolean {
     // Still outside: turn around, no need to enter.
     s.state = 'departing'
     const onDoorColumn = s.pos.x === LOT.entranceX && s.pos.y !== STREET.laneY
-    setRoute(s, [...(onDoorColumn ? [{ x: LOT.entranceX, y: STREET.laneY }] : []), streetEnd(s.side)])
+    setRoute(s, [
+      ...(onDoorColumn ? [{ x: LOT.entranceX, y: STREET.laneY }] : []),
+      streetEnd(s.side),
+    ])
     return true
   }
   s.state = 'leaving'

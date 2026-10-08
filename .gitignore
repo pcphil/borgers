@@ -24,3 +24,4 @@ Thumbs.db
 # personal Claude Code settings
 .claude/settings.local.json
 CLAUDE.md
+.shots/

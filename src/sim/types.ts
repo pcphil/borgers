@@ -94,13 +94,7 @@ export type Group = Agent & {
   satisfaction: number | null
 }
 
-export type StaffState =
-  | 'idle'
-  | 'walking'
-  | 'working'
-  | 'leaving'
-  | 'arriving'
-  | 'departing'
+export type StaffState = 'idle' | 'walking' | 'working' | 'leaving' | 'arriving' | 'departing'
 
 /** Fired staff on their way out (to the door, then along the street): no longer employed. */
 export const isLeaving = (state: StaffState) => state === 'leaving' || state === 'departing'
