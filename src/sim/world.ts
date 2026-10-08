@@ -12,7 +12,7 @@ import { Sim } from './sim'
 import { generateCandidates } from './staff'
 import { type World, ZONE_DINING, ZONE_KITCHEN, type Zone } from './types'
 
-export const SAVE_VERSION = 2
+export const SAVE_VERSION = 3
 
 /** Empty world with no objects, all-dining zones. */
 export function emptyWorld(seed: number): World {

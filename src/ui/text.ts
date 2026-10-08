@@ -53,6 +53,8 @@ export const STAFF_STATE_TEXT: Record<StaffState, string> = {
   walking: 'Walking',
   working: 'Working',
   leaving: 'Leaving',
+  arriving: 'Walking to the door',
+  departing: 'Heading home',
 }
 
 export const UNAVAILABLE_TEXT: Record<Unavailable, string> = {

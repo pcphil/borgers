@@ -1,15 +1,15 @@
-import { STAFF, ticks } from '../data/balance'
+import { LOT, STAFF, STREET, ticks } from '../data/balance'
 import { CATALOGUE } from '../data/catalogue'
 import { FIRST_NAMES, LAST_NAMES } from '../data/names'
 import { isUnlocked, type Role } from '../data/unlocks'
 import { accessTiles, tileOf } from './geometry'
 import { beginStep, completeStep, newTask, unclaimTask } from './kitchen'
-import { entranceTile, idx } from './layout'
-import { clearTarget, move, newAgent, setTarget } from './movement'
+import { entranceTile, idx, streetEnd } from './layout'
+import { clearTarget, move, newAgent, setRoute, setTarget, walkRoute } from './movement'
 import { distanceField } from './path'
-import { pick, randRange } from './rng'
+import { chance, pick, randRange } from './rng'
 import type { Sim } from './sim'
-import type { Candidate, Id, PlacedObject, Staff, Task, Vec } from './types'
+import { type Candidate, type Id, isLeaving, type PlacedObject, type Staff, type Task, type Vec } from './types'
 
 export function generateCandidates(sim: Sim) {
   const w = sim.world
@@ -30,7 +30,7 @@ export function generateCandidates(sim: Sim) {
 const round2 = (n: number) => Math.round(n * 100) / 100
 
 export const activeStaff = (sim: Sim) =>
-  Object.values(sim.world.staff).filter((s) => s.state !== 'leaving')
+  Object.values(sim.world.staff).filter((s) => !isLeaving(s.state))
 
 export const roleUnlocked = (sim: Sim, role: Role) =>
   isUnlocked(sim.world.stars, { kind: 'role', id: role })
@@ -42,21 +42,24 @@ export function hire(sim: Sim, candidateId: Id): Staff | null {
   w.candidates = w.candidates.filter((x) => x.id !== candidateId)
   const present = new Set(activeStaff(sim).map((s) => s.role))
   const role = (['cashier', 'cook', 'assembler'] as Role[]).find((r) => !present.has(r)) ?? 'cook'
-  const s = makeStaff(c, role)
+  const side: -1 | 1 = chance(w.rng, 0.5) ? 1 : -1
+  const s = makeStaff(c, role, side)
   w.staff[s.id] = s
+  setRoute(s, [{ x: LOT.entranceX, y: STREET.laneY }, entranceTile()])
   return s
 }
 
-function makeStaff(c: Candidate, role: Role): Staff {
+function makeStaff(c: Candidate, role: Role, side: -1 | 1): Staff {
   return {
-    ...newAgent(entranceTile()),
+    ...newAgent(streetEnd(side)),
     id: c.id,
     name: c.name,
     stats: { ...c.stats },
     wage: c.wage,
     role,
     pendingRole: null,
-    state: 'idle',
+    state: 'arriving',
+    side,
     taskId: null,
     stationId: null,
     workRemaining: 0,
@@ -81,8 +84,15 @@ function releaseBinding(sim: Sim, s: Staff) {
 
 export function fire(sim: Sim, staffId: Id): boolean {
   const s = sim.world.staff[staffId]
-  if (!s || s.state === 'leaving') return false
+  if (!s || isLeaving(s.state)) return false
   releaseBinding(sim, s)
+  if (s.state === 'arriving') {
+    // Still outside: turn around, no need to enter.
+    s.state = 'departing'
+    const onDoorColumn = s.pos.x === LOT.entranceX && s.pos.y !== STREET.laneY
+    setRoute(s, [...(onDoorColumn ? [{ x: LOT.entranceX, y: STREET.laneY }] : []), streetEnd(s.side)])
+    return true
+  }
   s.state = 'leaving'
   setTarget(sim, s, entranceTile(), false)
   return true
@@ -90,7 +100,7 @@ export function fire(sim: Sim, staffId: Id): boolean {
 
 export function setRole(sim: Sim, staffId: Id, role: Role): boolean {
   const s = sim.world.staff[staffId]
-  if (!s || s.state === 'leaving') return false
+  if (!s || isLeaving(s.state)) return false
   if (!roleUnlocked(sim, role)) return false
   if (s.role === role) {
     s.pendingRole = null
@@ -325,8 +335,26 @@ function finishWork(sim: Sim, s: Staff) {
 export function staffSystem(sim: Sim) {
   const w = sim.world
   for (const s of Object.values(w.staff)) {
+    if (s.state === 'arriving') {
+      if (walkRoute(s, walkSpeed(s)) === 'arrived') {
+        s.state = 'idle'
+        clearTarget(s)
+      }
+      continue
+    }
+    if (s.state === 'departing') {
+      if (walkRoute(s, walkSpeed(s)) === 'arrived') delete w.staff[s.id]
+      continue
+    }
     if (s.state === 'leaving') {
-      if (move(sim, s, walkSpeed(s), false) !== 'moving') delete w.staff[s.id]
+      const r = move(sim, s, walkSpeed(s), false)
+      if (r === 'moving') continue
+      const door = entranceTile()
+      // Only members who reached the door walk out along the street.
+      if (r === 'arrived' && s.pos.x === door.x && s.pos.y === door.y) {
+        s.state = 'departing'
+        setRoute(s, [{ x: LOT.entranceX, y: STREET.laneY }, streetEnd(s.side)])
+      } else delete w.staff[s.id]
       continue
     }
     if (s.state === 'working') {

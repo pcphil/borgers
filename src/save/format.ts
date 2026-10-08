@@ -42,6 +42,16 @@ export const MIGRATIONS: Record<number, (w: AnyRecord) => AnyRecord> = {
       ]),
     ),
   }),
+  // v3: staff walk in from the street and carry the side they came from. Old staff are inside.
+  2: (w) => ({
+    ...w,
+    staff: Object.fromEntries(
+      Object.entries((w.staff ?? {}) as Record<string, AnyRecord>).map(([id, s]) => [
+        id,
+        { ...s, side: s.side ?? 1 },
+      ]),
+    ),
+  }),
 }
 
 export function migrate(world: AnyRecord, from: number, to = SAVE_VERSION): AnyRecord {

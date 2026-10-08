@@ -94,7 +94,16 @@ export type Group = Agent & {
   satisfaction: number | null
 }
 
-export type StaffState = 'idle' | 'walking' | 'working' | 'leaving'
+export type StaffState =
+  | 'idle'
+  | 'walking'
+  | 'working'
+  | 'leaving'
+  | 'arriving'
+  | 'departing'
+
+/** Fired staff on their way out (to the door, then along the street): no longer employed. */
+export const isLeaving = (state: StaffState) => state === 'leaving' || state === 'departing'
 
 export type StaffStats = { cooking: number; speed: number; service: number }
 
@@ -106,6 +115,8 @@ export type Staff = Agent & {
   role: Role
   pendingRole: Role | null
   state: StaffState
+  /** Street end the member walked in from and leaves toward. */
+  side: -1 | 1
   taskId: Id | null
   /** Station or register the staff member is bound to while working. */
   stationId: Id | null
