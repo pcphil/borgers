@@ -157,7 +157,7 @@ function figures(w: World, alpha: number, staff: boolean): Figure[] {
         angry: g.angry,
         bobSeed: g.id + m,
       }
-      if (table && seatPosition(table, m, v)) {
+      if (table && seatPosition(table, g.seatIdx[m] ?? m, v)) {
         const t = objectTransform(table.def, table.x, table.y, table.rot)
         fig.x = v.x
         fig.z = v.z

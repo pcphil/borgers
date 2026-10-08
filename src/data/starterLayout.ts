@@ -21,8 +21,8 @@ export const STARTER = {
     { def: 'table2', x: 0, y: 3, rot: 0 },
     { def: 'bin', x: 11, y: 4, rot: 0 },
   ] satisfies StarterObject[] as StarterObject[],
-  /** Covers a full first day (measured peak use: bun 71, patty 80, lettuce/tomato 71, syrup 53); two fridges hold 450. */
-  stock: { bun: 80, patty: 90, lettuce: 80, tomato: 80, syrup: 60 } as Partial<
+  /** Covers a full first day (measured peak use: bun/patty/lettuce/tomato 85, syrup 54); two fridges hold 450. */
+  stock: { bun: 95, patty: 95, lettuce: 95, tomato: 95, syrup: 65 } as Partial<
     Record<Ingredient, number>
   >,
 }

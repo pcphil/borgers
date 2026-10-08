@@ -1,7 +1,7 @@
 // Helpers for building small deterministic scenarios in tests.
 import { expect } from 'vitest'
 import { CUSTOMERS, STREET } from '../data/balance'
-import type { ObjectDefId } from '../data/catalogue'
+import { CATALOGUE, type ObjectDefId } from '../data/catalogue'
 import { INGREDIENTS, type Ingredient } from '../data/recipes'
 import type { Role } from '../data/unlocks'
 import { MAXH, MAXW, newPlacedObject } from './layout'
@@ -125,8 +125,30 @@ export function checkInvariants(sim: Sim) {
   for (const o of Object.values(w.objects)) {
     for (const slot of o.slots) if (slot !== null) expect(w.tasks[slot]).toBeDefined()
     for (const g of o.queue) expect(w.groups[g]?.registerId).toBe(o.id)
-    if (o.occupiedBy !== null) expect(w.groups[o.occupiedBy]?.tableId).toBe(o.id)
+    expect(o.seatOccupants).toHaveLength(CATALOGUE[o.def].seats ?? 0)
+    const seated = new Set<number>()
+    o.seatOccupants.forEach((gid, chair) => {
+      if (gid === null) return
+      const g = w.groups[gid]
+      expect(g, `chair ${chair} of table ${o.id} held by missing group ${gid}`).toBeDefined()
+      expect(g?.tableId).toBe(o.id)
+      expect(g?.seatIdx).toContain(chair)
+      seated.add(gid)
+    })
+    expect(o.dirty && seated.size > 0, `dirty table ${o.id} has diners`).toBe(false)
+    if (seated.size > 1)
+      for (const gid of seated) expect(w.groups[gid]?.size, `shared table ${o.id}`).toBe(1)
     for (const r of o.readyOrders) expect(w.orders[r]?.state).toBe('ready')
+  }
+  for (const g of Object.values(w.groups)) {
+    if (g.tableId === null) {
+      expect(g.seatIdx, `group ${g.id} holds chairs without a table`).toEqual([])
+      continue
+    }
+    const t = w.objects[g.tableId]
+    expect(t, `group ${g.id} bound to missing table ${g.tableId}`).toBeDefined()
+    expect(g.seatIdx).toHaveLength(g.size)
+    for (const chair of g.seatIdx) expect(t?.seatOccupants[chair]).toBe(g.id)
   }
   expect(Object.keys(w.groups).length).toBeLessThanOrEqual(CUSTOMERS.maxActiveGroups + 1)
 }

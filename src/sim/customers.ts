@@ -128,6 +128,7 @@ export function spawnGroup(sim: Sim, opts: { atDoor?: boolean } = {}): Group {
     registerId: null,
     orderId: null,
     tableId: null,
+    seatIdx: [],
     eatTicks: 0,
     queueWait: 0,
     foodWait: 0,
@@ -303,8 +304,31 @@ function waitSpot(sim: Sim, g: Group): Vec | null {
 
 // ---------- seating ----------
 
-const canSeat = (o: PlacedObject, g: Group) =>
-  (CATALOGUE[o.def].seats ?? 0) >= g.size && o.occupiedBy === null
+/**
+ * Chair-level seating. A group of 2+ needs a table with every chair free and keeps it to itself;
+ * a solo diner needs a free chair at a table where only other solo diners sit.
+ */
+function canSeat(w: World, o: PlacedObject, g: Group): boolean {
+  if (o.seatOccupants.length < g.size) return false
+  if (g.size >= 2) return o.seatOccupants.every((id) => id === null)
+  let free = false
+  for (const id of o.seatOccupants) {
+    if (id === null) free = true
+    else if ((w.groups[id]?.size ?? 1) !== 1) return false
+  }
+  return free
+}
+
+/** Take the chairs: a group of 2+ the first `size` chairs, a solo diner the lowest free chair. */
+function claimSeats(o: PlacedObject, g: Group) {
+  g.seatIdx = []
+  for (let i = 0; i < o.seatOccupants.length && g.seatIdx.length < g.size; i++)
+    if (o.seatOccupants[i] === null) {
+      o.seatOccupants[i] = g.id
+      g.seatIdx.push(i)
+    }
+  g.tableId = o.id
+}
 
 function findTable(sim: Sim, g: Group): { table: PlacedObject; tile: Vec } | 'dirty' | null {
   const w = sim.world
@@ -312,7 +336,7 @@ function findTable(sim: Sim, g: Group): { table: PlacedObject; tile: Vec } | 'di
   let best: { table: PlacedObject; tile: Vec; d: number } | null = null
   let sawDirty = false
   for (const o of Object.values(w.objects)) {
-    if (!canSeat(o, g)) continue
+    if (!canSeat(w, o, g)) continue
     if (o.dirty) {
       sawDirty = true
       continue
@@ -334,16 +358,26 @@ function dirtNear(w: World, at: Vec): number {
   return n
 }
 
+/**
+ * Give up the chairs. A table that someone ate at turns dirty, with one cleaning task, when its
+ * last diner has left; a diner who never ate (or a mid-meal release) only frees chairs.
+ */
 function vacateTable(sim: Sim, g: Group) {
   const w = sim.world
   if (g.tableId === null) return
   const t = w.objects[g.tableId]
+  const held = g.seatIdx
   g.tableId = null
-  if (!t || t.occupiedBy !== g.id) return
-  t.occupiedBy = null
+  g.seatIdx = []
+  if (!t) return
+  for (const i of held) if (t.seatOccupants[i] === g.id) t.seatOccupants[i] = null
   if (g.state !== 'eating') return
-  t.dirty = true
-  newTask(sim, { role: 'cleaner', kind: 'clean', tableId: t.id })
+  t.used = true
+  if (t.seatOccupants.every((id) => id === null)) {
+    t.used = false
+    t.dirty = true
+    newTask(sim, { role: 'cleaner', kind: 'clean', tableId: t.id })
+  }
   const binNear = Object.values(w.objects).some(
     (o) => o.def === 'bin' && manhattan(o, t) <= CUSTOMERS.binRange,
   )
@@ -545,7 +579,9 @@ export function customerSystem(sim: Sim) {
       case 'seeking': {
         g.prev = { ...g.pos }
         if (g.timer > g.patience.seat) {
-          leaveAngry(sim, g, 'noSeats')
+          // No seat is not a failure: the group already has its food, so it takes it away.
+          g.takeout = true
+          startLeaving(sim, g)
           break
         }
         const found = findTable(sim, g)
@@ -554,8 +590,7 @@ export function customerSystem(sim: Sim) {
           break
         }
         if (!found) break
-        found.table.occupiedBy = g.id
-        g.tableId = found.table.id
+        claimSeats(found.table, g)
         g.state = 'toSeat'
         setTarget(sim, g, found.tile, true)
         break
@@ -612,15 +647,18 @@ export function customerSystem(sim: Sim) {
 /** Groups currently bound to an object, for release on sell/move. */
 export function releaseGroupsAt(sim: Sim, o: PlacedObject) {
   const w = sim.world
-  if (o.occupiedBy !== null) {
-    const g = w.groups[o.occupiedBy]
-    o.occupiedBy = null
-    if (g) {
+  if (o.seatOccupants.some((id) => id !== null)) {
+    for (const gid of new Set(o.seatOccupants)) {
+      const g = gid !== null ? w.groups[gid] : undefined
+      if (!g) continue
       const wasEating = g.state === 'eating'
       g.tableId = null
+      g.seatIdx = []
       if (wasEating) startLeaving(sim, g)
       else g.state = 'seeking'
     }
+    o.seatOccupants.fill(null)
+    o.used = false
   }
   if (o.def === 'register') {
     for (const gid of o.queue) {
