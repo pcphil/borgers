@@ -18,7 +18,7 @@
 - [x] 3.1 Run `pnpm simulate 30 <seed> competent` for seeds 1-5; verify day 1 is not `noSeats`, day-1 reputation >= 50, no bankruptcies, and star days stay within the Goals band; record the table in Findings. If outside the band, shrink the first pool to 4 per D5 and rerun.
 - [x] 3.2 Play day 1 in the browser (prep, then lunch rush at 3x) with the five hires and check the table at (5,1) does not block the queue; verify no stock-out hint and diners find seats, and note the screenshots in Findings.
 - [x] 3.3 Run `pnpm lint`, `pnpm check:sim`, `pnpm exec tsc -b`, `pnpm test` (also with `SOAK=1`), `pnpm test:e2e` and `pnpm build`; verify all pass.
-- [ ] 3.4 Update README if it describes the starter layout or candidate pool; save the `chair-seating` and candidate-carry-over follow-ups to project memory; open PR, CI green, merge, then archive the change.
+- [x] 3.4 Update README if it describes the starter layout or candidate pool; save the `chair-seating` and candidate-carry-over follow-ups to project memory; open PR, CI green, merge, then archive the change.
 
 ## Findings
 

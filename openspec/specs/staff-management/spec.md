@@ -7,11 +7,15 @@ Defines the restaurant's workforce: hiring from a candidate pool, staff stats an
 ## Requirements
 
 ### Requirement: Candidate pool
-The game SHALL offer a pool of 3 randomly generated candidates, refreshed every night. Each candidate SHALL have a name, a cooking stat, a speed stat, a service stat, and a daily wage ask that rises with their stats.
+The game SHALL offer a pool of 3 randomly generated candidates, refreshed every night, except that a new game SHALL start with a first pool of 5 candidates so a full day-1 team can be hired. Each candidate SHALL have a name, a cooking stat, a speed stat, a service stat, and a daily wage ask that rises with their stats.
 
 #### Scenario: Nightly refresh
 - **WHEN** night settlement runs
 - **THEN** the unhired candidates are replaced with 3 new candidates
+
+#### Scenario: First pool of a new game
+- **WHEN** a new game starts
+- **THEN** the candidate pool holds 5 candidates, and after the first night it holds 3
 
 ### Requirement: Hire and fire
 The player SHALL be able to hire a candidate, who then arrives from the street, walks to the door and becomes available when they reach it, and fire any staff member at any time. A fired staff member SHALL drop their current task back into its queue and walk out through the door and along the street, disappearing at the street end they came from. A staff member who is fired while still walking in SHALL turn around and walk back out the way they came.
