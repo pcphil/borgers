@@ -11,16 +11,24 @@ import { newGame } from './world'
 const SEEDS = [1, 2, 3, 4, 5]
 
 describe('starter layout playability (early-game-balance)', () => {
-  it('seats at least twelve diners', () => {
+  it('seats at least fourteen diners', () => {
     const seats = STARTER.objects.reduce((n, o) => n + (CATALOGUE[o.def].seats ?? 0), 0)
-    expect(seats).toBeGreaterThanOrEqual(12)
+    expect(seats).toBeGreaterThanOrEqual(14)
+  })
+
+  it('a new game starts with a pool of 5 candidates and refreshes to 3 at night', () => {
+    const sim = newGame(1)
+    expect(sim.world.candidates).toHaveLength(5)
+    sim.settle()
+    expect(sim.world.candidates).toHaveLength(3)
   })
 
   for (const seed of SEEDS) {
-    it(`seed ${seed}: day 1 with three hires has no stock-out and is not a seating failure`, () => {
+    it(`seed ${seed}: day 1 with the full team has no stock-out, no seating failure and reputation >= 50`, () => {
       const sim = newGame(seed)
+      expect(sim.world.candidates).toHaveLength(5)
       STRATEGIES.competent?.(sim)
-      expect(Object.keys(sim.world.staff)).toHaveLength(3)
+      expect(Object.keys(sim.world.staff)).toHaveLength(5)
       // Ingredients of everything the player can sell on day 1.
       const used = new Set<Ingredient>()
       for (const id of MENU_ITEM_IDS)
@@ -40,6 +48,7 @@ describe('starter layout playability (early-game-balance)', () => {
       const top = Object.entries(day?.complaints ?? {}).sort((a, b) => b[1] - a[1])[0]
       expect(top?.[0]).not.toBe('noSeats')
       expect(day?.complaints.nothingToOrder ?? 0).toBe(0)
+      expect(day?.repEnd ?? 0).toBeGreaterThanOrEqual(50)
     })
   }
 })

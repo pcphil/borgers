@@ -1,4 +1,4 @@
-import { ECONOMY, LOT } from '../data/balance'
+import { ECONOMY, LOT, STAFF } from '../data/balance'
 import { INGREDIENTS } from '../data/recipes'
 import { STARTER } from '../data/starterLayout'
 import { RUSH_KNOTS } from './customers'
@@ -71,7 +71,7 @@ export function newGame(seed: number): Sim {
     w.inventory.targets[i] = n
     w.inventory.auto[i] = n > 0
   }
-  generateCandidates(sim)
+  generateCandidates(sim, STAFF.firstCandidates)
   sim.layoutChanged()
   sim.refreshHints()
   return sim

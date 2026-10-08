@@ -16,6 +16,7 @@ export const STARTER = {
     { def: 'fridge', x: 11, y: 8, rot: 0 },
     { def: 'table4', x: 2, y: 2, rot: 0 },
     { def: 'table4', x: 8, y: 1, rot: 0 },
+    { def: 'table2', x: 5, y: 1, rot: 0 },
     { def: 'table2', x: 10, y: 2, rot: 0 },
     { def: 'table2', x: 0, y: 3, rot: 0 },
     { def: 'bin', x: 11, y: 4, rot: 0 },
