@@ -70,3 +70,14 @@ The lot SHALL be enclosed by perimeter walls on its boundary, with a door openin
 #### Scenario: Expansion
 - **WHEN** the player buys the lot expansion
 - **THEN** the walls and door are drawn on the new, larger boundary with the door still at the entrance
+
+### Requirement: Seated posture
+Customers who are eating SHALL be drawn sitting upright on their chair, facing the table, with their bodies not passing through the table or the chair. The seated figure SHALL look the same size as a standing one.
+
+#### Scenario: Diners at a table
+- **WHEN** a group is seated at a table
+- **THEN** each member sits upright on a chair facing the table, with torso above the seat and no part of the body inside the table top
+
+#### Scenario: Rotating the view
+- **WHEN** the player rotates the view by 90 degrees
+- **THEN** seated customers still sit on their chairs facing the table from every rotation
