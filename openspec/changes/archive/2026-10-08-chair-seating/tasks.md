@@ -23,7 +23,7 @@
 - [x] 4.1 Re-measure `pnpm simulate 30 <seed> competent` for seeds 1-5; decide per D4/D8 on any solo-fills-shared-tables bias and on trimming starter tables; verify day-1 rep stays at 50 or better, no bankruptcies, star days within about 2 days of the baseline, and record the before/after table in Findings.
 - [x] 4.2 Update tests and e2e broken by the model change or a trimmed starter (`e2e/walls.spec.ts` bin spots, `e2e/playthrough.spec.ts`); verify `pnpm test:e2e` passes.
 - [x] 4.3 Run `pnpm lint`, `pnpm check:sim`, `pnpm exec tsc -b`, `pnpm exec vitest run`, `SOAK=1 pnpm exec vitest run`, `pnpm test:e2e` and `pnpm build`; verify all pass.
-- [ ] 4.4 Update README and CLAUDE.md if they describe seating or table occupancy; open PR, CI green, merge, then archive the change.
+- [x] 4.4 Update README and CLAUDE.md if they describe seating or table occupancy; open PR, CI green, merge, then archive the change.
 
 ## Findings
 
