@@ -31,7 +31,7 @@
 
 - [x] 6.1 `pnpm lint`, `pnpm check:sim`, `pnpm exec tsc -b` (not the rtk summary), `pnpm test` (with `SOAK=1` once), `pnpm test:e2e`, `pnpm build` all pass
 - [x] 6.2 `pnpm simulate 30 <seed> competent` seeds 1-5 compared with the `world-dressing` results in `openspec/changes/archive/2026-10-06-world-dressing/tasks.md` Findings (star days within a day or two, no bankruptcies); record the table here
-- [ ] 6.3 Update README/CLAUDE.md if behavior they describe changed; open PR, CI green, merged; archive the change
+- [x] 6.3 Update README/CLAUDE.md if behavior they describe changed; open PR, CI green, merged; archive the change
 
 ## Findings
 
