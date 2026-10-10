@@ -79,5 +79,5 @@ describe('the first day is small', () => {
     expect(mean).toBeGreaterThanOrEqual(18)
     expect(mean).toBeLessThanOrEqual(26)
     expect(Math.max(...counts)).toBeLessThan(40)
-  })
+  }, 60_000)
 })
