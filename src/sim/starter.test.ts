@@ -24,11 +24,11 @@ describe('starter layout playability (early-game-balance)', () => {
   })
 
   for (const seed of SEEDS) {
-    it(`seed ${seed}: day 1 with the full team has no stock-out, no seating failure and reputation >= 50`, () => {
+    it(`seed ${seed}: day 1 with the core three has no stock-out, no seating failure and reputation >= 50`, () => {
       const sim = newGame(seed)
       expect(sim.world.candidates).toHaveLength(5)
       STRATEGIES.competent?.(sim)
-      expect(Object.keys(sim.world.staff)).toHaveLength(5)
+      expect(Object.keys(sim.world.staff)).toHaveLength(3)
       // Ingredients of everything the player can sell on day 1.
       const used = new Set<Ingredient>()
       for (const id of MENU_ITEM_IDS)

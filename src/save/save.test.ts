@@ -152,6 +152,27 @@ describe('versioning (10.2)', () => {
     runTicks(loaded, 1500)
     expect(hashWorld(loaded.world)).toBe(hashWorld(sim.world))
   })
+  it('migrates v4 saves: an open day keeps demand at the reputation at load', () => {
+    const sim = busyGame()
+    const v4 = JSON.parse(JSON.stringify(sim.world))
+    v4.version = 4
+    v4.demandRep = undefined
+    const save = deserialize({ format: 'borgers-save', version: 4, savedAt: '', world: v4 })
+    expect(save.version).toBe(SAVE_VERSION)
+    expect(save.world.demandRep).toBe(save.world.reputation.value)
+    const loaded = toSim(save)
+    runTicks(loaded, 1500)
+    checkInvariants(loaded)
+  })
+  it('a save keeps the day-open reputation separate from the current one', () => {
+    const sim = busyGame()
+    sim.world.demandRep = 12.5
+    const loaded = toSim(deserialize(JSON.parse(exportJson(serialize(sim)))))
+    expect(loaded.world.demandRep).toBe(12.5)
+    runTicks(sim, 800)
+    runTicks(loaded, 800)
+    expect(hashWorld(loaded.world)).toBe(hashWorld(sim.world))
+  })
   it('refuses saves from a newer version', () => {
     const s = { ...serialize(newGame(1)), version: SAVE_VERSION + 1 }
     expect(() => deserialize(s)).toThrow(/newer version/)

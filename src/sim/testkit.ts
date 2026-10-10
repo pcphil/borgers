@@ -160,3 +160,14 @@ export function stepUntil(sim: Sim, pred: () => boolean, max = 20_000): number {
   }
   throw new Error('stepUntil: condition not reached')
 }
+
+/** Hire the three best candidates as the core day-1 team: cashier, cook, assembler. */
+export function hireCoreThree(sim: Sim) {
+  const score = (c: { stats: StaffStats }) => c.stats.cooking + c.stats.speed + c.stats.service
+  const best = [...sim.world.candidates].sort((a, b) => score(b) - score(a)).slice(0, 3)
+  const roles: Role[] = ['cashier', 'cook', 'assembler']
+  best.forEach((c, i) => {
+    sim.dispatch({ type: 'hire', candidateId: c.id })
+    sim.dispatch({ type: 'setRole', staffId: c.id, role: roles[i] as Role })
+  })
+}

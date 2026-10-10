@@ -127,6 +127,7 @@ describe('arrivals (8.1)', () => {
   const avgRate = (rep: number, fromHour: number, toHour: number) => {
     const sim = makeSim({ objects: BASIC_OBJECTS, stock: BASIC_STOCK })
     sim.world.reputation.value = rep
+    sim.world.demandRep = rep
     let sum = 0
     let n = 0
     for (let t = (fromHour - 10) * TICKS_PER_HOUR; t < (toHour - 10) * TICKS_PER_HOUR; t += 10) {

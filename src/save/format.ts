@@ -82,6 +82,11 @@ export const MIGRATIONS: Record<number, (w: AnyRecord) => AnyRecord> = {
       ),
     }
   },
+  // v5: the day's demand follows the reputation at opening. An open day keeps today's reputation.
+  4: (w) => ({
+    ...w,
+    demandRep: (w.reputation as { value?: number } | undefined)?.value ?? 50,
+  }),
 }
 
 export function migrate(world: AnyRecord, from: number, to = SAVE_VERSION): AnyRecord {

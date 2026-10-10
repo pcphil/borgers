@@ -235,6 +235,8 @@ export type World = {
     history: DayRecord[]
   }
   reputation: { scores: number[]; value: number }
+  /** Reputation taken when the restaurant opened: it sets the day's customer demand. */
+  demandRep: number
   stars: number
   winSeen: boolean
   dismissedHints: string[]
