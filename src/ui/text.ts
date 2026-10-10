@@ -63,3 +63,9 @@ export const UNAVAILABLE_TEXT: Record<Unavailable, string> = {
   noStation: 'Missing station',
   outOfStock: 'Out of stock',
 }
+
+/** HUD tooltip: how reputation sets the crowd (the multiplier is held for the day once open). */
+export function reputationTip(reputation: number, factor: number, preparing: boolean): string {
+  const f = Number(factor.toFixed(2))
+  return `Reputation ${Math.round(reputation)}: customers ×${f} ${preparing ? 'if you open now' : 'today'}`
+}

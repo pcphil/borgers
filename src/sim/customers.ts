@@ -27,17 +27,19 @@ import type { Complaint, Group, PlacedObject, Vec, World } from './types'
 
 // ---------- demand ----------
 
-export function demandAt(hour: number): number {
-  const c = CUSTOMERS.demandCurve
-  const first = c[0] as [number, number]
-  if (hour <= first[0]) return first[1]
-  for (let i = 1; i < c.length; i++) {
-    const [h1, v1] = c[i] as [number, number]
-    const [h0, v0] = c[i - 1] as [number, number]
-    if (hour <= h1) return v0 + ((v1 - v0) * (hour - h0)) / (h1 - h0)
+/** Piecewise-linear lookup in a sorted table of [x, y] points, clamped at both ends. */
+function lerpTable(table: readonly (readonly [number, number])[], x: number): number {
+  const first = table[0] as readonly [number, number]
+  if (x <= first[0]) return first[1]
+  for (let i = 1; i < table.length; i++) {
+    const [x1, y1] = table[i] as readonly [number, number]
+    const [x0, y0] = table[i - 1] as readonly [number, number]
+    if (x <= x1) return y0 + ((y1 - y0) * (x - x0)) / (x1 - x0)
   }
-  return (c[c.length - 1] as [number, number])[1]
+  return (table[table.length - 1] as readonly [number, number])[1]
 }
+
+export const demandAt = (hour: number) => lerpTable(CUSTOMERS.demandCurve, hour)
 
 /** Rush knots: one per hour boundary from opening to closing. */
 export const RUSH_KNOTS = 13
@@ -70,7 +72,14 @@ export function drawRush(w: World): number[] {
   return raw.map((m) => m * k)
 }
 
-export const reputationFactor = (rep: number) => 0.4 + 1.2 * (rep / 100)
+/** Customer multiplier for a reputation (see `CUSTOMERS.reputationDemand`). */
+export const reputationFactor = (rep: number) => lerpTable(CUSTOMERS.reputationDemand, rep)
+
+/** The day's demand reputation if the restaurant opened now: it builds up toward the current reputation. */
+export const demandRepAtOpen = (w: World) => {
+  const gap = w.reputation.value - w.demandRep
+  return w.demandRep + (gap > 0 ? CUSTOMERS.demandBuildUp : CUSTOMERS.demandFade) * gap
+}
 
 /** Average attractiveness of available items' prices (1 = fair pricing). */
 export function priceFactor(w: World): number {
@@ -90,7 +99,7 @@ export function arrivalRate(w: World): number {
   return (
     (demandAt(hour) / TICKS_PER_HOUR) *
     rushAt(w.rush, hour) *
-    reputationFactor(w.reputation.value) *
+    reputationFactor(w.demandRep) *
     priceFactor(w)
   )
 }

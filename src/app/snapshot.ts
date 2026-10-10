@@ -1,5 +1,6 @@
 import { CLOSE_HOUR, NIGHT_TICKS, OPEN_HOUR, TICKS_PER_HOUR } from '../data/balance'
 import { INGREDIENTS, type Ingredient, MENU_ITEM_IDS, type MenuItemId } from '../data/recipes'
+import { demandRepAtOpen, reputationFactor } from '../sim/customers'
 import type { Hint } from '../sim/hints'
 import { capacity, totalStock } from '../sim/inventory'
 import { type Unavailable, unavailableReason } from '../sim/menu'
@@ -19,6 +20,8 @@ export type Snapshot = {
   cash: number
   loan: number
   reputation: number
+  /** Customer multiplier in effect today, or the one opening now would give while preparing. */
+  demandFactor: number
   stars: number
   winPending: boolean
   hints: Hint[]
@@ -69,6 +72,7 @@ export function makeSnapshot(sim: Sim, speed: Speed): Snapshot {
     cash: w.economy.cash,
     loan: w.economy.loan,
     reputation: w.reputation.value,
+    demandFactor: reputationFactor(w.clock.phase === 'prep' ? demandRepAtOpen(w) : w.demandRep),
     stars: w.stars,
     winPending: w.stars >= 5 && !w.winSeen,
     hints: sim.hints.filter((h) => !w.dismissedHints.includes(h.id)),

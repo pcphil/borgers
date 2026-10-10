@@ -8,7 +8,15 @@ import {
   TICKS_PER_HOUR,
   TICKS_PER_SECOND,
 } from '../data/balance'
-import { arrivalSystem, demandAt, drawRush, leaveAngry, rushAt, spawnGroup } from './customers'
+import {
+  arrivalSystem,
+  demandAt,
+  drawRush,
+  leaveAngry,
+  reputationFactor,
+  rushAt,
+  spawnGroup,
+} from './customers'
 import { entranceTile, MAXW } from './layout'
 import { newAgent, setRoute, walkRoute } from './movement'
 import { runDays } from './runner'
@@ -143,8 +151,8 @@ describe('rush pattern', () => {
     }
     let expected = 0
     for (let t = 0; t < OPEN_TICKS; t++) expected += demandAt(OPEN_HOUR + t / TICKS_PER_HOUR)
-    // Reputation (50) and fair prices give factor 1.0 here; allow statistical noise.
-    const factor = 0.4 + 1.2 * (w.reputation.value / 100)
+    // The day's reputation factor and fair prices scale the base curve; allow statistical noise.
+    const factor = reputationFactor(w.demandRep)
     const perDayExpected = (expected / TICKS_PER_HOUR) * factor
     expect(total / days).toBeGreaterThan(perDayExpected * 0.93)
     expect(total / days).toBeLessThan(perDayExpected * 1.07)

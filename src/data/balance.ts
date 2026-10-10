@@ -92,6 +92,22 @@ export const CUSTOMERS = {
     [22, 0],
   ] as [number, number][],
   priceElasticity: 2,
+  /**
+   * Customer multiplier by reputation (0-100), linearly interpolated. A new game starts at the
+   * neutral 50, so day 1 is small; a poor reputation slows demand but never empties the place.
+   */
+  reputationDemand: [
+    [0, 0.3],
+    [30, 0.38],
+    [50, 0.45],
+    [70, 1.2],
+    [85, 1.5],
+    [100, 1.6],
+  ] as [number, number][],
+  /** Share of the gap between a day's demand reputation and the current reputation closed at opening. */
+  demandBuildUp: 0.4,
+  /** Same, when the reputation is below the day's demand reputation: a bad day dents the crowd less than a good one builds it. */
+  demandFade: 0.2,
 }
 
 export const REPUTATION = {

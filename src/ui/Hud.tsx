@@ -4,6 +4,7 @@ import { money } from '../app/snapshot'
 import { type Panel, useUI } from '../app/store'
 import { ROTATE_EVENT } from '../render/CameraRig'
 import { Stars } from './common'
+import { reputationTip } from './text'
 
 const SPEEDS: { s: Speed; label: string; key: string }[] = [
   { s: 0, label: '⏸', key: 'Space' },
@@ -59,7 +60,10 @@ export function Hud() {
           Open restaurant
         </button>
       ) : null}
-      <div className="text-amber-950" title="Reputation (0–100)">
+      <div
+        className="text-amber-950"
+        title={reputationTip(snap.reputation, snap.demandFactor, snap.phase === 'prep')}
+      >
         😊 {Math.round(snap.reputation)}
       </div>
       <div className="text-amber-950" title="Customers in the restaurant">

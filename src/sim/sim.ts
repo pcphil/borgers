@@ -2,7 +2,13 @@ import { ECONOMY, LOT, NIGHT_TICKS, OPEN_TICKS } from '../data/balance'
 import { CATALOGUE, type ObjectDefId } from '../data/catalogue'
 import type { Ingredient, MenuItemId } from '../data/recipes'
 import { isUnlocked, type Role } from '../data/unlocks'
-import { arrivalSystem, customerSystem, drawRush, releaseGroupsAt } from './customers'
+import {
+  arrivalSystem,
+  customerSystem,
+  demandRepAtOpen,
+  drawRush,
+  releaseGroupsAt,
+} from './customers'
 import { canAfford, newDayRecord, refund, repayLoan, spend, takeLoan } from './economy'
 import { footprintTiles, type Placement } from './geometry'
 import { computeHints, type Hint } from './hints'
@@ -194,6 +200,7 @@ export class Sim {
     w.clock.phase = 'open'
     for (const s of Object.values(w.staff)) s.employedAtOpen = !isLeaving(s.state)
     w.rush = drawRush(w)
+    w.demandRep = demandRepAtOpen(w)
     this.emit({ type: 'autosave' })
     return OK
   }

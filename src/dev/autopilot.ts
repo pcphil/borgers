@@ -28,7 +28,7 @@ const score = (c: { stats: { cooking: number; speed: number; service: number } }
 
 /** Staff plan by star rating; a competent player grows the team as stars unlock things. */
 const PLAN: Record<number, Role[]> = {
-  1: ['cashier', 'cook', 'assembler', 'cook', 'assembler'],
+  1: ['cashier', 'cook', 'assembler'],
   2: ['cashier', 'cook', 'assembler', 'cook', 'cleaner', 'assembler'],
   3: ['cashier', 'cook', 'assembler', 'cook', 'cleaner', 'assembler', 'cook', 'cashier'],
   4: ['cashier', 'cook', 'assembler', 'cook', 'cleaner', 'assembler', 'cook', 'cashier', 'cook'],
